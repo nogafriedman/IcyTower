@@ -3,146 +3,153 @@ using UnityEngine;
 [RequireComponent(typeof(Rigidbody2D))]
 public class PlayerController2D : MonoBehaviour
 {
-    [Header("Refs")]
-    [SerializeField] Transform groundCheck;
-    [SerializeField] LayerMask groundLayers = 0;
-
-    [Header("Ground Check")]
-    [SerializeField] Vector2 groundCheckSize = new Vector2(0.6f, 0.1f);
+    [Header("References")]
+    [SerializeField] Transform groundCheck;        // child at feet
+    [SerializeField] LayerMask groundMask;
 
     [Header("Run")]
-    [SerializeField] float moveSpeed = 12f;        // target horizontal speed at full stick
-    [SerializeField] float accel = 70f;            // when pressing towards target
-    [SerializeField] float decel = 80f;            // when no input or opposite
-    [SerializeField] float airControl = 0.7f;      // percentage of accel/decel allowed in air
-    [SerializeField] float apexHang = 0.25f;       // 0..0.4: slight slowdown near jump apex
-    [SerializeField] float maxRunSpeed = 16f;      // safety clamp (mobile frame hitches)
+    [SerializeField] float maxRunSpeed = 12f;
+    [SerializeField] float runAccel = 90f;         // accel on ground
+    [SerializeField] float runDecel = 100f;        // decel on ground
+    [SerializeField, Range(0f,1f)] float airControl = 0.6f;
 
     [Header("Jump")]
-    [SerializeField] float jumpForce = 16f;        // impulse when starting a jump
-    [SerializeField] float coyoteTime = 0.12f;     // after leaving ground
-    [SerializeField] float jumpBuffer = 0.12f;     // before landing
-    [SerializeField] float baseGravityScale = 3.3f;// baseline gravity
-    [SerializeField] float fallGravityMul = 2.2f;  // extra gravity when falling
-    [SerializeField] float jumpCutMul = 2.8f;      // extra gravity when jump released early
-    [SerializeField] float maxFallSpeed = 28f;     // terminal velocity clamp
+    [SerializeField] float jumpVelocity = 16f;
+    [SerializeField] float coyoteTime = 0.1f;      // grace after leaving ledge
+    [SerializeField] float jumpBuffer = 0.12f;     // press jump slightly early
 
-    [Header("Debug")]
-    [SerializeField] bool drawGizmos = true;
+    [Header("Better Jump")]
+    [SerializeField] float fallGravityMul = 2.0f;  // extra gravity when falling
+    [SerializeField] float jumpCutMul = 2.5f;      // extra gravity when jump released early
+    [SerializeField] float maxFallSpeed = -25f;
+    [SerializeField] float fastFallMul = 2.2f;     // down key pressed
 
-    // Public read-only state (useful for UI/FX)
-    public bool Grounded { get; private set; }
-    public Vector2 Velocity => rb.linearVelocity;
-    public System.Action OnLand;
+    [Header("Ground Check")]
+    [SerializeField] float groundCheckRadius = 0.18f;
 
-    // Internals
+    public enum InputMode { Keyboard, Touch }
+
+    [Header("Input Source")]
+    [SerializeField] InputMode inputMode = InputMode.Keyboard;
+
     Rigidbody2D rb;
-    bool wasGrounded;
-    float lastGroundedTime = -999f;
-    float lastJumpPressedTime = -999f;
+    IPlayerInput input;
 
-    // cached input (filled by feeders each frame)
-    float inputX;
-    bool jumpHeld;
+    // state
+    bool isGrounded;
+    float lastGroundedTime;
+    float lastJumpPressedTime;
 
-    // ================= LIFECYCLE =================
+    // cached
+    const float EPS = 0.001f;
+
     void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
-        rb.gravityScale = baseGravityScale;
+        rb.freezeRotation = true;
+        rb.interpolation = RigidbodyInterpolation2D.Interpolate;
     }
 
-    /// <summary>Feed inputs from any source once per frame.</summary>
-    public void SetInput(float moveX, bool jumpDown, bool jumpIsHeld)
+    void Start()
     {
-        inputX = Mathf.Clamp(moveX, -1f, 1f);
-        if (jumpDown) lastJumpPressedTime = Time.time; // buffer the press time
-        jumpHeld = jumpIsHeld;
+        SwitchInput(inputMode);
+    }
+
+    void SwitchInput(InputMode mode)
+    {
+        inputMode = mode;
+        input = (mode == InputMode.Keyboard) ? (IPlayerInput)new KeyboardInput()
+                                             : (IPlayerInput)new TouchInput();
     }
 
     void Update()
     {
-        // 1) Ground check (do in Update for snappier events)
-        Grounded = Physics2D.OverlapBox(groundCheck.position, groundCheckSize, 0f, groundLayers);
-        if (Grounded) lastGroundedTime = Time.time;
-        if (Grounded && !wasGrounded) OnLand?.Invoke();
-        wasGrounded = Grounded;
+        // Swap inputs at runtime (optional, for testing)
+        if (Application.isEditor)
+        {
+            if (Input.GetKeyDown(KeyCode.F1)) SwitchInput(InputMode.Keyboard);
+            if (Input.GetKeyDown(KeyCode.F2)) SwitchInput(InputMode.Touch);
+        }
 
-        // 2) Gravity shaping for variable jump & fast fall (frame-rate independent)
-        ApplyBetterJumpGravity();
+        input.UpdateInput();
+
+        // Timers for coyote & buffer
+        if (IsOnGround()) { isGrounded = true; lastGroundedTime = coyoteTime; }
+        else              { isGrounded = false; lastGroundedTime -= Time.deltaTime; }
+
+        if (input.JumpPressed) lastJumpPressedTime = jumpBuffer;
+        else                   lastJumpPressedTime -= Time.deltaTime;
+
+        // Try to jump in Update (read inputs here), apply in FixedUpdate via velocity set
+        if (CanJump())
+        {
+            DoJump();
+        }
+
+        // Variable jump: if player releases jump early and is rising, apply extra gravity
+        if (!isGrounded && rb.linearVelocity.y > 0f && !input.JumpHeld)
+        {
+            rb.linearVelocity = new Vector2(rb.linearVelocity.x, rb.linearVelocity.y + (jumpCutMul -1f) * Physics2D.gravity.y * Time.deltaTime);
+        }
+
+        // Fast fall
+        if (Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.DownArrow))
+        {
+            // Extra gravity when pressing down (keyboard only; on touch you could map a two-finger hold)
+            rb.linearVelocity = new Vector2(rb.linearVelocity.x,
+                Mathf.Max(maxFallSpeed, rb.linearVelocity.y + Physics2D.gravity.y * (fastFallMul - 1f) * Time.deltaTime));
+        }
     }
 
     void FixedUpdate()
     {
-        HandleRun();
-        TryConsumeJump();
-        ClampFallSpeed();
-    }
+        // Horizontal movement
+        float targetSpeed = input.MoveX * maxRunSpeed;
+        float speedDif = targetSpeed - rb.linearVelocity.x;
 
-    // ================= MOVEMENT =================
-    void HandleRun()
-    {
-        float target = inputX * moveSpeed;
+        float accelRate = 0f;
+        if (Mathf.Abs(targetSpeed) > EPS)
+            accelRate = isGrounded ? runAccel : runAccel * airControl;
+        else
+            accelRate = isGrounded ? runDecel : runDecel * airControl;
 
-        // Apex hang: reduce effective target speed when near top of jump for precision control
-        float verticalSpeed = Mathf.Abs(rb.linearVelocity.y);
-        float nearApex01 = 1f - Mathf.InverseLerp(0f, 2f, verticalSpeed); // 1 near apex, 0 when moving fast vertically
-        float apexFactor = 1f - nearApex01 * apexHang;                    // reduce target near apex
-        if (!Grounded) target *= apexFactor;
+        float movement = speedDif * accelRate * Time.fixedDeltaTime;
+        rb.linearVelocity = new Vector2(rb.linearVelocity.x + movement, rb.linearVelocity.y);
 
-        float accelRate = (Mathf.Abs(target) > 0.01f) ? accel : decel;
-        if (!Grounded) accelRate *= airControl;
-
-        float speedDiff = target - rb.linearVelocity.x;
-        float force = speedDiff * accelRate * Time.fixedDeltaTime;
-        rb.AddForce(new Vector2(force, 0f), ForceMode2D.Force);
-
-        // safety clamp
-        rb.linearVelocity = new Vector2(Mathf.Clamp(rb.linearVelocity.x, -maxRunSpeed, maxRunSpeed), rb.linearVelocity.y);
-    }
-
-    // ================= JUMPING =================
-    void TryConsumeJump()
-    {
-        bool canCoyote = (Time.time - lastGroundedTime) <= coyoteTime;
-        bool hasBuffered = (Time.time - lastJumpPressedTime) <= jumpBuffer;
-
-        if (hasBuffered && canCoyote)
+        // Better fall gravity (when moving downward)
+        if (rb.linearVelocity.y < -EPS)
         {
-            // reset vertical for consistent jump height
-            rb.linearVelocity = new Vector2(rb.linearVelocity.x, 0f);
-            rb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
-
-            // consume buffer
-            lastJumpPressedTime = -999f;
+            float extraG = (fallGravityMul - 1f) * Physics2D.gravity.y * Time.fixedDeltaTime;
+            rb.linearVelocity = new Vector2(rb.linearVelocity.x, Mathf.Max(maxFallSpeed, rb.linearVelocity.y + extraG));
         }
     }
 
-    void ApplyBetterJumpGravity()
+    bool CanJump()
     {
-        // jump cut: if rising and jump is released, increase gravity
-        if (rb.linearVelocity.y > 0f && !jumpHeld)
-        {
-            rb.linearVelocity += Vector2.up * Physics2D.gravity.y * (jumpCutMul - 1f) * Time.deltaTime * rb.gravityScale;
-        }
-        // faster fall
-        if (rb.linearVelocity.y < 0f)
-        {
-            rb.linearVelocity += Vector2.up * Physics2D.gravity.y * (fallGravityMul - 1f) * Time.deltaTime * rb.gravityScale;
-        }
+        return lastGroundedTime > 0f && lastJumpPressedTime > 0f;
     }
 
-    void ClampFallSpeed()
+    void DoJump()
     {
-        if (rb.linearVelocity.y < -maxFallSpeed)
-            rb.linearVelocity = new Vector2(rb.linearVelocity.x, -maxFallSpeed);
+        rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpVelocity);
+        lastJumpPressedTime = 0f;
+        lastGroundedTime = 0f;
     }
 
-    // ================= DEBUG =================
+    bool IsOnGround()
+    {
+        if (!groundCheck) return false;
+        return Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, groundMask);
+    }
+
+#if UNITY_EDITOR
     void OnDrawGizmosSelected()
     {
-        if (!drawGizmos || !groundCheck) return;
-        Gizmos.color = Color.green;
-        Gizmos.DrawWireCube(groundCheck.position, groundCheckSize);
+        if (groundCheck)
+        {
+            Gizmos.color = Color.green;
+            Gizmos.DrawWireSphere(groundCheck.position, groundCheckRadius);
+        }
     }
+#endif
 }
