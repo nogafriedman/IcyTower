@@ -5,7 +5,7 @@ using UnityEngine;
 public class PlatformGenerator : MonoBehaviour
 {
     public GameObject platformPrefab; 
-    public Transform player;       
+    public GameObject player;       
     public int initialPlatformCount = 10;  // how many platforms to generate at the beginning of the game
     public float minGap = 0.5f; //minimum gap between platforms
     public float maxGap = 2f; //maximum gap between platforms   
@@ -25,7 +25,7 @@ public class PlatformGenerator : MonoBehaviour
 
     void Update()
     {
-        while (spawnPosition.y < player.position.y + 10f)
+        while (spawnPosition.y < player.transform.position.y + 10f)
         {
             SpawnPlatform();
         }
