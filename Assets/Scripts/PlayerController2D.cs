@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class PlayerController2D : MonoBehaviour
 {
-
+    public ScoreManager scoreManager;
     private Rigidbody2D rb;
 
     [Header("Movement")]
@@ -36,11 +36,11 @@ public class PlayerController2D : MonoBehaviour
 
     private void Update()
     {
-        isGrounded = groundCheck &&
-                    Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, groundLayers);
-
+        isGrounded = groundCheck && Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, groundLayers);
         if (Input.GetButtonDown("Jump") && isGrounded)
             jump = true;
+
+        scoreManager.UpdateComboTimeout();
     }
 
     private void FixedUpdate()
@@ -65,9 +65,7 @@ public class PlayerController2D : MonoBehaviour
         {
             float horizontalBonus = Mathf.Abs(currSpeedX) * HorizontalJumpBonus;
             float totalJumpPower = jumpImpulse + horizontalBonus;
-
             rb.AddForce(Vector2.up * totalJumpPower);
-
             jump = false;
         }
     }
@@ -77,21 +75,29 @@ public class PlayerController2D : MonoBehaviour
         return (mask.value & (1 << obj.layer)) != 0;
     }
 
-    private void OnCollisionEnter2D(Collision2D col)
+    private void OnCollisionEnter2D(Collision2D collision)
     {
-        if (IsInLayerMask(col.gameObject, wallLayers))
+        if (IsInLayerMask(collision.gameObject, wallLayers))
         {
+            // Collision with wall (bounce effect):
             // {
             //     Vector2 rev = new Vector2(rb.linearVelocity.x * wallBounceMultiplier, 0f);
             //     rb.AddForce(rev, ForceMode2D.Impulse);
             // }
             {
-                Vector2 n = col.GetContact(0).normal;  // wall surface normal
-                Vector2 v = rb.linearVelocity;               // player's current velocity
-
-                if (Vector2.Dot(v, n) < 0f)            // only if moving into the wall
+                Vector2 n = collision.GetContact(0).normal; // wall surface normal
+                Vector2 v = rb.linearVelocity; // player's current velocity
+                if (Vector2.Dot(v, n) < 0f) // only if moving into the wall
                     rb.linearVelocity = Vector2.Reflect(v, n) * wallBounceMultiplier;
             }
+        }
+
+        // Collision with platform (update score):
+        if (IsInLayerMask(collision.gameObject, groundLayers) &&
+            collision.gameObject.TryGetComponent<PlatformIndex>(out var p))
+        {
+            int idx = (int)p.floorIndex;
+            scoreManager.UpdateScore(idx);
         }
     }
 }
