@@ -21,6 +21,7 @@ public class PlayerController2D : MonoBehaviour
     [Header("GroundCheck")]
     private bool isGrounded;
     private int groundMask;
+    private IncreasePlayerSpeed speedBoost;
     [SerializeField] private Transform groundCheck;
     [SerializeField] private float groundCheckRadius = 0.12f;
 
@@ -32,6 +33,7 @@ public class PlayerController2D : MonoBehaviour
     {
         rb = GetComponent<Rigidbody2D>();
         groundMask = LayerMask.GetMask("Ground");
+        speedBoost = GetComponent<IncreasePlayerSpeed>(); //boost
     }
 
     private void Update()
@@ -45,8 +47,13 @@ public class PlayerController2D : MonoBehaviour
 
     private void FixedUpdate()
     {
+        float boost = speedBoost != null ? speedBoost.CurrentMultiplier : 1f;//current multiplier (1 = normal, >1 = faster after pickup)
         float inputX = Input.GetAxis("Horizontal");
         float currSpeedX = rb.linearVelocity.x;
+        
+        // BOOST: apply boost to movement caps/forces
+        float boostedMaxSpeed = maxSpeed * boost;
+		float boostedAcceleration = moveAcceleration * boost;
 
         // Horizontal movement
         if (Mathf.Abs(inputX * currSpeedX) < maxSpeed)
