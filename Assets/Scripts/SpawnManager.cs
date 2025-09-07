@@ -8,8 +8,8 @@ public class SpawnManager : MonoBehaviour
 
     [Header("Walls")]
     [SerializeField] private GameObject wallPrefab;
-    [SerializeField] private float wallHeight = 100f;
-    [SerializeField] private int initialWallCount = 10;
+    [SerializeField] private float wallHeight = 10f;
+    [SerializeField] private int initialWallCount = 4;
     [SerializeField] private float wallSpawnAhead = 10f;
 
     [Header("Platforms")]
@@ -22,7 +22,8 @@ public class SpawnManager : MonoBehaviour
 
     private int nextFloorIndex = 1;
 
-    private readonly List<GameObject> wallPool = new List<GameObject>();
+    private readonly List<GameObject> leftWallPool = new List<GameObject>();
+    private readonly List<GameObject> rightWallPool = new List<GameObject>();
     private readonly List<GameObject> platformPool = new List<GameObject>();
     private float nextWallY;
     private float nextPlatformY;
@@ -35,22 +36,26 @@ public class SpawnManager : MonoBehaviour
 
     private void Update()
     {
-        if (nextWallY - player.position.y < wallSpawnAhead)
+
+        while (nextWallY - player.position.y < wallSpawnAhead)
             RespawnWall();
 
-        if (nextPlatformY - player.position.y < platformSpawnAhead)
+        while (nextPlatformY - player.position.y < platformSpawnAhead)
             RespawnPlatform();
     }
 
     private void InitWalls()
     {
-        wallPool.Capacity = Mathf.Max(wallPool.Capacity, initialWallCount);
+        float screenHalfWidth = Camera.main.orthographicSize * Camera.main.aspect;
 
         for (int i = 0; i < initialWallCount; i++)
         {
-            var pos = new Vector3(0f, nextWallY, 0f);
-            var segment = Instantiate(wallPrefab, pos, Quaternion.identity, transform);
-            wallPool.Add(segment);
+            var left = Instantiate(wallPrefab, new Vector3(-screenHalfWidth, nextWallY, 0f), Quaternion.identity, transform);
+            leftWallPool.Add(left);
+
+            var right = Instantiate(wallPrefab, new Vector3(+screenHalfWidth, nextWallY, 0f), Quaternion.identity, transform);
+            rightWallPool.Add(right);
+
             nextWallY += wallHeight;
         }
     }
@@ -72,11 +77,17 @@ public class SpawnManager : MonoBehaviour
 
     private void RespawnWall()
     {
-        var wall = wallPool[0];
-        wallPool.RemoveAt(0);
+        float screenHalfWidth = Camera.main.orthographicSize * Camera.main.aspect;
 
-        wall.transform.position = new Vector3(0f, nextWallY, 0f);
-        wallPool.Add(wall);
+        var left = leftWallPool[0];
+        leftWallPool.RemoveAt(0);
+        left.transform.position = new Vector3(-screenHalfWidth, nextWallY, 0f);
+        leftWallPool.Add(left);
+
+        var right = rightWallPool[0];
+        rightWallPool.RemoveAt(0);
+        right.transform.position = new Vector3(+screenHalfWidth, nextWallY, 0f);
+        rightWallPool.Add(right);
 
         nextWallY += wallHeight;
     }
