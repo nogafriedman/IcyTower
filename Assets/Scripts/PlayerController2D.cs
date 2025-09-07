@@ -79,16 +79,14 @@ public class PlayerController2D : MonoBehaviour
     {
         if (IsInLayerMask(collision.gameObject, wallLayers))
         {
-            // Collision with wall (bounce effect):
-            // {
-            //     Vector2 rev = new Vector2(rb.linearVelocity.x * wallBounceMultiplier, 0f);
-            //     rb.AddForce(rev, ForceMode2D.Impulse);
-            // }
+            Vector2 n = collision.GetContact(0).normal;     // surface normal
+            Vector2 v = rb.linearVelocity;
+
+            if (Mathf.Abs(n.x) > 0.5f)
             {
-                Vector2 n = collision.GetContact(0).normal; // wall surface normal
-                Vector2 v = rb.linearVelocity; // player's current velocity
-                if (Vector2.Dot(v, n) < 0f) // only if moving into the wall
-                    rb.linearVelocity = Vector2.Reflect(v, n) * wallBounceMultiplier;
+                Debug.Log("Collision with wall, current score: " + scoreManager.CurrentScore);
+                Vector2 r = Vector2.Reflect(v, n) * wallBounceMultiplier; // 1.0 = elastic
+                rb.linearVelocity = r;
             }
         }
 
