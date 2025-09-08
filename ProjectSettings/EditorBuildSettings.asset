@@ -6,8 +6,17 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
+    path: Assets/Scenes/MainMenu.unity
+    guid: 5bdd3c599a9429e41ae92091f891eca6
+  - enabled: 1
     path: Assets/Scenes/Game.unity
     guid: 8c9cfa26abfee488c85f1582747f6a02
+  - enabled: 1
+    path: Assets/Scenes/Instructions.unity
+    guid: 13c69fe6364bce44a8040476a2081f9c
+  - enabled: 1
+    path: Assets/Scenes/ScoreTable.unity
+    guid: 456623196bfddce428d46acff1dcf013
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
   m_UseUCBPForAssetBundles: 0
