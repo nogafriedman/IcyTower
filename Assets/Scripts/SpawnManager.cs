@@ -26,7 +26,7 @@ public class SpawnManager : MonoBehaviour
     private readonly List<GameObject> rightWallPool = new List<GameObject>();
     private readonly List<GameObject> platformPool = new List<GameObject>();
     private float nextWallY;
-    private float nextPlatformY;
+    private float nextPlatformY = 2f;
 
     private void Awake()
     {
