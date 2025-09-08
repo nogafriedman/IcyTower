@@ -9,7 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1492072158416645898}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: GroundCheck
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -295,12 +295,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 88281eaf2524e24409c542cef9c847c1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  scoreManager: {fileID: 0}
   moveAcceleration: 365
   maxSpeed: 5
   jumpImpulse: 1000
   HorizontalJumpBonus: 100
   maxJumpImpulse: 1500
-  wallBounceBonus: 1.25
+  wallBounceMultiplier: 1.25
   groundCheck: {fileID: 1492072158416645898}
   groundCheckRadius: 0.18
   groundLayers:
@@ -308,5 +309,4 @@ MonoBehaviour:
     m_Bits: 64
   wallLayers:
     serializedVersion: 2
-    m_Bits: 0
-  minBounceImpulse: 2
+    m_Bits: 128

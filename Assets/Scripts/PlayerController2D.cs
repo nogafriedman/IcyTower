@@ -33,7 +33,7 @@ public class PlayerController2D : MonoBehaviour
     {
         rb = GetComponent<Rigidbody2D>();
         groundMask = LayerMask.GetMask("Ground");
-        speedBoost = GetComponent<IncreasePlayerSpeed>(); //boost
+        speedBoost = GetComponent<IncreasePlayerSpeed>(); //boost 
     }
 
     private void Update()
