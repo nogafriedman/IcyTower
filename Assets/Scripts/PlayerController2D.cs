@@ -6,28 +6,43 @@ public class PlayerController2D : MonoBehaviour
     private Rigidbody2D rb;
 
     [Header("Movement")]
-    public float moveAcceleration = 365f;
+    public float moveAcceleration = 360f;
     public float maxSpeed = 5f;
 
     [Header("Jumping")]
     private bool jump = false;
-    public float jumpImpulse = 1000f;
-    public float HorizontalJumpBonus = 100f;
+    public float jumpImpulse = 1200f;
     public float maxJumpImpulse = 1500f;
+    public float HorizontalJumpBonus = 100f;
+    public float maxHorizontalBonus = 200f;
+
+    [Header("Airtime / Floatiness")]
+    // Gravity scale while ascending and jump is still held (< 1 = floatier)
+    public float ascendGravityScale = 0.75f;
+    // Gravity scale while falling (≈1 stays floaty; >1 falls faster)
+    public float fallGravityScale = 1.5f;
+    // Extra upward force time while holding Jump after takeoff
+    public float jumpSustainTime = 0.12f;
+    // FixedUpdate upward force during sustain
+    public float jumpSustainForce = 18f;
+    private float sustainTimer;
 
     [Header("Walls")]
     public float wallBounceMultiplier = 1.25f;
+    public float maxBounceSpeed = 8f;
 
     [Header("GroundCheck")]
     private bool isGrounded;
     private int groundMask;
-    private IncreasePlayerSpeed speedBoost;
     [SerializeField] private Transform groundCheck;
     [SerializeField] private float groundCheckRadius = 0.12f;
 
     [Header("Layers")]
     [SerializeField] private LayerMask groundLayers;
     [SerializeField] private LayerMask wallLayers;
+
+    [Header("PowerUps")]
+    private IncreasePlayerSpeed speedBoost;
 
     private void Awake()
     {
@@ -41,40 +56,71 @@ public class PlayerController2D : MonoBehaviour
         isGrounded = groundCheck && Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, groundLayers);
         if (Input.GetButtonDown("Jump") && isGrounded)
             jump = true;
+            sustainTimer = jumpSustainTime;
 
         scoreManager.UpdateComboTimeout();
     }
 
     private void FixedUpdate()
     {
-        float boost = speedBoost != null ? speedBoost.CurrentMultiplier : 1f;//current multiplier (1 = normal, >1 = faster after pickup)
-        float inputX = Input.GetAxis("Horizontal");
+        float inputX = Input.GetAxisRaw("Horizontal");
         float currSpeedX = rb.linearVelocity.x;
-        
+
+        float accel = isGrounded ? moveAcceleration : moveAcceleration * 0.50f;
+
         // BOOST: apply boost to movement caps/forces
+        float boost = speedBoost != null ? speedBoost.CurrentMultiplier : 1f;
         float boostedMaxSpeed = maxSpeed * boost;
-		float boostedAcceleration = moveAcceleration * boost;
+        float boostedAcceleration = moveAcceleration * boost;
 
-        // Horizontal movement
-        if (Mathf.Abs(inputX * currSpeedX) < maxSpeed)
+        if (Mathf.Abs(inputX) > 0.05f)
         {
-            Vector2 force = new Vector2(inputX * moveAcceleration, 0f);
-            rb.AddForce(force);
+            rb.AddForce(new Vector2(inputX * accel, 0f));
+        }
+        else
+        {
+            // faster decel on ground, gentle in air
+            float decel = isGrounded ? 32f : 8f;
+            rb.linearVelocity = new Vector2(
+                Mathf.MoveTowards(currSpeedX, 0f, decel * Time.fixedDeltaTime),
+                rb.linearVelocity.y
+            );
         }
 
-        // Stop if no input
-        if (Mathf.Abs(inputX) <= 0.05f)
-        {
-            rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
-        }
+        // hard cap X speed (lower cap in air)
+        float cap = isGrounded ? maxSpeed : maxSpeed * 0.95f;
+        rb.linearVelocity = new Vector2(
+            Mathf.Clamp(rb.linearVelocity.x, -cap, cap),
+            rb.linearVelocity.y
+        );
 
         if (jump)
         {
-            float horizontalBonus = Mathf.Abs(currSpeedX) * HorizontalJumpBonus;
-            float totalJumpPower = jumpImpulse + horizontalBonus;
-            rb.AddForce(Vector2.up * totalJumpPower);
+            float horizontalBonus = Mathf.Min(Mathf.Abs(rb.linearVelocity.x) * HorizontalJumpBonus, maxHorizontalBonus);
+            float totalJumpPower = Mathf.Min(jumpImpulse + horizontalBonus, maxJumpImpulse);
+            rb.AddForce(Vector2.up * totalJumpPower, ForceMode2D.Force);
             jump = false;
         }
+
+        if (sustainTimer > 0f && Input.GetButton("Jump") && rb.linearVelocity.y > 0f)
+        {
+            rb.AddForce(Vector2.up * jumpSustainForce, ForceMode2D.Force);
+            sustainTimer -= Time.fixedDeltaTime;
+        }
+
+        if (rb.linearVelocity.y > 0f)
+        {
+            rb.gravityScale = Input.GetButton("Jump") ? ascendGravityScale : fallGravityScale;
+        }
+        else if (rb.linearVelocity.y < 0f)
+        {
+            rb.gravityScale = fallGravityScale;
+        }
+        else
+        {
+            rb.gravityScale = 1f;
+        }
+
     }
 
     private bool IsInLayerMask(GameObject obj, LayerMask mask)
@@ -86,17 +132,8 @@ public class PlayerController2D : MonoBehaviour
     {
         if (IsInLayerMask(collision.gameObject, wallLayers))
         {
-            // Collision with wall (bounce effect):
-            // {
-            //     Vector2 rev = new Vector2(rb.linearVelocity.x * wallBounceMultiplier, 0f);
-            //     rb.AddForce(rev, ForceMode2D.Impulse);
-            // }
-            {
-                Vector2 n = collision.GetContact(0).normal; // wall surface normal
-                Vector2 v = rb.linearVelocity; // player's current velocity
-                if (Vector2.Dot(v, n) < 0f) // only if moving into the wall
-                    rb.linearVelocity = Vector2.Reflect(v, n) * wallBounceMultiplier;
-            }
+             Vector2 v = new Vector2(rb.linearVelocity.x * wallBounceMultiplier,  rb.linearVelocityY * 0.1f);
+			rb.AddForce(v, ForceMode2D.Impulse);
         }
 
         // Collision with platform (update score):
@@ -104,7 +141,7 @@ public class PlayerController2D : MonoBehaviour
             collision.gameObject.TryGetComponent<PlatformIndex>(out var p))
         {
             int idx = (int)p.floorIndex;
-            scoreManager.UpdateScore(idx);
+            scoreManager.UpdateState(idx);
         }
     }
 }
