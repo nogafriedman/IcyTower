@@ -55,9 +55,10 @@ public class PlayerController2D : MonoBehaviour
     {
         isGrounded = groundCheck && Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, groundLayers);
         if (Input.GetButtonDown("Jump") && isGrounded)
+        {
             jump = true;
             sustainTimer = jumpSustainTime;
-
+        }
         scoreManager.UpdateComboTimeout();
     }
 
@@ -80,7 +81,7 @@ public class PlayerController2D : MonoBehaviour
         else
         {
             // faster decel on ground, gentle in air
-            float decel = isGrounded ? 32f : 8f;
+            float decel = isGrounded ? 20f : 4f;
             rb.linearVelocity = new Vector2(
                 Mathf.MoveTowards(currSpeedX, 0f, decel * Time.fixedDeltaTime),
                 rb.linearVelocity.y
@@ -132,7 +133,7 @@ public class PlayerController2D : MonoBehaviour
     {
         if (IsInLayerMask(collision.gameObject, wallLayers))
         {
-             Vector2 v = new Vector2(rb.linearVelocity.x * wallBounceMultiplier,  rb.linearVelocityY * 0.1f);
+             Vector2 v = new Vector2(rb.linearVelocity.x * wallBounceMultiplier,  rb.linearVelocityY * 0.2f);
 			rb.AddForce(v, ForceMode2D.Impulse);
         }
 
