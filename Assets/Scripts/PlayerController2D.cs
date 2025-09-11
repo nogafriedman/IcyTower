@@ -172,7 +172,7 @@ public class PlayerController2D : MonoBehaviour
         }
 
         // Collision with platform (update score):
-        if (IsInLayerMask(collision.gameObject, groundLayers) && collision.gameObject.TryGetComponent<PlatformIndex>(out var p))
+        if (IsInLayerMask(collision.gameObject, groundLayers) && collision.gameObject.TryGetComponent<PlatformIndex>(out var p) && isGrounded)
         {
             int idx = (int)p.floorIndex;
             scoreManager.UpdateState(idx);
