@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 
 public class PlayerController2D : MonoBehaviour
@@ -8,6 +9,9 @@ public class PlayerController2D : MonoBehaviour
     [Header("Movement")]
     public float moveAcceleration = 360f;
     public float maxSpeed = 5f;
+    private float baseMoveAcceleration;
+    private float baseMaxSpeed;
+    private Coroutine moveBoostRoutine;
 
     [Header("Jumping")]
     private bool jump = false;
@@ -34,6 +38,7 @@ public class PlayerController2D : MonoBehaviour
     [Header("GroundCheck")]
     private bool isGrounded;
     private int groundMask;
+    private IncreasePlayerSpeed speedBoost;
     [SerializeField] private Transform groundCheck;
     [SerializeField] private float groundCheckRadius = 0.12f;
 
@@ -41,14 +46,13 @@ public class PlayerController2D : MonoBehaviour
     [SerializeField] private LayerMask groundLayers;
     [SerializeField] private LayerMask wallLayers;
 
-    [Header("PowerUps")]
-    private IncreasePlayerSpeed speedBoost;
-
     private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
         groundMask = LayerMask.GetMask("Ground");
-        speedBoost = GetComponent<IncreasePlayerSpeed>(); //boost 
+        baseMoveAcceleration = moveAcceleration;
+        baseMaxSpeed = maxSpeed;
+
     }
 
     private void Update()
@@ -133,8 +137,8 @@ public class PlayerController2D : MonoBehaviour
     {
         if (IsInLayerMask(collision.gameObject, wallLayers))
         {
-             Vector2 v = new Vector2(rb.linearVelocity.x * wallBounceMultiplier,  rb.linearVelocityY * 0.2f);
-			rb.AddForce(v, ForceMode2D.Impulse);
+            Vector2 v = new Vector2(rb.linearVelocity.x * wallBounceMultiplier, rb.linearVelocityY * 0.2f);
+            rb.AddForce(v, ForceMode2D.Impulse);
         }
 
         // Collision with platform (update score):
@@ -145,4 +149,29 @@ public class PlayerController2D : MonoBehaviour
             scoreManager.UpdateState(idx);
         }
     }
+    public void ApplyTemporaryMovementBoost(float multiplier, float durationSeconds)
+    {
+        if (moveBoostRoutine != null)
+        {
+            StopCoroutine(moveBoostRoutine);
+            ResetMovementToBase();
+        }
+        moveBoostRoutine = StartCoroutine(DoMovementBoost(multiplier, durationSeconds));
+    }
+
+    private IEnumerator DoMovementBoost(float multiplier, float durationSeconds)
+    {
+        moveAcceleration = baseMoveAcceleration * multiplier;
+        maxSpeed = baseMaxSpeed * multiplier;
+        yield return new WaitForSeconds(durationSeconds);
+        ResetMovementToBase();
+        moveBoostRoutine = null;
+    }
+
+    private void ResetMovementToBase()
+    {
+        moveAcceleration = baseMoveAcceleration;
+        maxSpeed = baseMaxSpeed;
+    }
+
 }

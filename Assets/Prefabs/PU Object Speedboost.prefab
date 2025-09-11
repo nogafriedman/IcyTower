@@ -11,7 +11,6 @@ GameObject:
   - component: {fileID: 8494595115338026239}
   - component: {fileID: 6491392764552399120}
   - component: {fileID: 8630038283557551659}
-  - component: {fileID: 7541533291320258317}
   m_Layer: 0
   m_Name: PU Object Speedboost
   m_TagString: Untagged
@@ -135,15 +134,3 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 0.11, y: 0.11}
   m_EdgeRadius: 0
---- !u!114 &7541533291320258317
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2008943056310657723}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6b6b50bf64441704ab38156005acd5a4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
