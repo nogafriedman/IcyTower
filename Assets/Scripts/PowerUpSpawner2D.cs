@@ -55,7 +55,7 @@ public sealed class PowerUpSpawner2D : MonoBehaviour
 
         if (platforms.Count == 0 || powerUpPrefabs == null || powerUpPrefabs.Length == 0)
         {
-            Debug.LogWarning("PowerUpSpawner2D: no platforms or prefabs assigned.");
+            // Debug.LogWarning("PowerUpSpawner2D: no platforms or prefabs assigned.");
             return false;
         }
 
@@ -83,7 +83,7 @@ public sealed class PowerUpSpawner2D : MonoBehaviour
 
             GameObject prefab = powerUpPrefabs[Random.Range(0, powerUpPrefabs.Length)];
             instance = Instantiate(prefab, pos, Quaternion.identity);
-            Debug.Log($"[Spawner] Spawned at {pos} using {prefab.name}");
+            // Debug.Log($"[Spawner] Spawned at {pos} using {prefab.name}");
             return true;
         }
 
@@ -129,7 +129,7 @@ public sealed class PowerUpSpawner2D : MonoBehaviour
 
     public void NotifyReachedFloor(int floorIndex)
     {
-        Debug.Log($"[Spawner] NotifyReachedFloor({floorIndex}) next={nextSpawnFloor}");
+        // Debug.Log($"[Spawner] NotifyReachedFloor({floorIndex}) next={nextSpawnFloor}");
         if (floorIndex < nextSpawnFloor) return;
 
         int alive =
@@ -138,13 +138,13 @@ public sealed class PowerUpSpawner2D : MonoBehaviour
 #else
 		UnityEngine.Object.FindObjectsOfType<PowerUpPickup2D>().Length;
 #endif
-        Debug.Log($"[Spawner] alive={alive} maxConcurrent={maxConcurrent}");
+        // Debug.Log($"[Spawner] alive={alive} maxConcurrent={maxConcurrent}");
 
         if (alive >= maxConcurrent) return;
 
         if (TrySpawn(out _))
         {
-            Debug.Log($"[Spawner] spawned power-up, next target = {nextSpawnFloor + spawnEveryPlatforms}");
+            // Debug.Log($"[Spawner] spawned power-up, next target = {nextSpawnFloor + spawnEveryPlatforms}");
             nextSpawnFloor += spawnEveryPlatforms;
         }
     }

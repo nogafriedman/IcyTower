@@ -64,7 +64,6 @@ public class PlayerController2D : MonoBehaviour
             jump = true;
             sustainTimer = jumpSustainTime;
         }
-        scoreManager.UpdateComboTimeout();
     }
 
     private void FixedUpdate()
@@ -134,6 +133,36 @@ public class PlayerController2D : MonoBehaviour
         return (mask.value & (1 << obj.layer)) != 0;
     }
 
+
+// private void OnTriggerEnter2D(Collider2D other)
+// {
+//     if (!IsInLayerMask(other.gameObject, groundLayers)) return;
+
+//     Debug.Log($"[Player] OnTriggerEnter");
+
+//     // Must be falling (ignore when coming up through
+//     //  the effector)
+//     if (rb.linearVelocity.y > -0.01f) return;
+//     Debug.Log($"[Player] OnTriggerEnter passed falling check");
+
+//     var idxComp = other.GetComponentInParent<PlatformIndex>();
+//     if (idxComp == null) return;
+
+//     int idx = idxComp.floorIndex;
+
+//     if (idx == _lastScoredFloor || Time.frameCount == _lastLandingFrame) return;
+
+//     _lastScoredFloor = idx;
+//     _lastLandingFrame = Time.frameCount;
+
+
+//         // Update score and notify spawner
+//         scoreManager.UpdateState(idx);
+//     if (powerUpSpawner == null) powerUpSpawner = FindObjectOfType<PowerUpSpawner2D>();
+//     powerUpSpawner?.NotifyReachedFloor(idx);
+// }
+
+
     private void OnCollisionEnter2D(Collision2D collision)
     {
         if (IsInLayerMask(collision.gameObject, wallLayers))
@@ -148,7 +177,7 @@ public class PlayerController2D : MonoBehaviour
             int idx = (int)p.floorIndex;
             scoreManager.UpdateState(idx);
             if (powerUpSpawner == null) powerUpSpawner = FindObjectOfType<PowerUpSpawner2D>();
-            Debug.Log($"[Player] reached floor {idx}");
+            Debug.Log($"[Player] OncollisionEnter: floor {idx}");
             powerUpSpawner?.NotifyReachedFloor(idx);
         }
     }
