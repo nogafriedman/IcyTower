@@ -3,6 +3,7 @@ using UnityEngine;
 
 public class PlayerController2D : MonoBehaviour
 {
+    [SerializeField] private PowerUpSpawner2D powerUpSpawner;
     public ScoreManager scoreManager;
     private Rigidbody2D rb;
 
@@ -142,11 +143,13 @@ public class PlayerController2D : MonoBehaviour
         }
 
         // Collision with platform (update score):
-        if (IsInLayerMask(collision.gameObject, groundLayers) &&
-            collision.gameObject.TryGetComponent<PlatformIndex>(out var p))
+        if (IsInLayerMask(collision.gameObject, groundLayers) && collision.gameObject.TryGetComponent<PlatformIndex>(out var p))
         {
             int idx = (int)p.floorIndex;
             scoreManager.UpdateState(idx);
+            if (powerUpSpawner == null) powerUpSpawner = FindObjectOfType<PowerUpSpawner2D>();
+            Debug.Log($"[Player] reached floor {idx}");
+            powerUpSpawner?.NotifyReachedFloor(idx);
         }
     }
     public void ApplyTemporaryMovementBoost(float multiplier, float durationSeconds)

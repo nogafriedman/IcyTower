@@ -96,6 +96,19 @@ TextureImporter:
     ignorePlatformSupport: 0
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
   spriteSheet:
     serializedVersion: 2
     sprites:
@@ -104,12 +117,12 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 23
-        y: 25
+        y: 0
         width: 340
-        height: 562
-      alignment: 0
-      pivot: {x: 0.5, y: 0.5}
-      border: {x: 0, y: 17, z: 11, w: 0}
+        height: 587
+      alignment: 9
+      pivot: {x: 0.5, y: 0.22}
+      border: {x: 0, y: 17, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
@@ -117,6 +130,28 @@ TextureImporter:
       bones: []
       spriteID: 0ba1ed270d2247d50800000000000000
       internalID: 6734045621501434544
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: assets_task_01k4mms389fxksafremgymgctd_1757334621_img_1-removebg-preview_1
+      rect:
+        serializedVersion: 2
+        x: 186
+        y: 593
+        width: 8
+        height: 19
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 308b8a1a6661cd6439da16ef4bdba410
+      internalID: 54732274
       vertices: []
       indices: 
       edges: []
@@ -136,6 +171,7 @@ TextureImporter:
       entries: []
     nameFileIdTable:
       assets_task_01k4mms389fxksafremgymgctd_1757334621_img_1-removebg-preview_0: 6734045621501434544
+      assets_task_01k4mms389fxksafremgymgctd_1757334621_img_1-removebg-preview_1: 54732274
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

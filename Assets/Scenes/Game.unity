@@ -164,6 +164,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   player: {fileID: 106243632}
+  powerUpSpawner: {fileID: 0}
   wallPrefab: {fileID: 264430119}
   wallHeight: 10
   initialWallCount: 10
@@ -196,6 +197,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 88281eaf2524e24409c542cef9c847c1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  powerUpSpawner: {fileID: 0}
   scoreManager: {fileID: 1156471976}
   moveAcceleration: 500
   maxSpeed: 7
@@ -563,8 +565,8 @@ SpriteRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
+  m_SortingLayerID: 807523229
+  m_SortingLayer: 2
   m_SortingOrder: 0
   m_Sprite: {fileID: 7482667652216324306, guid: 311925a002f4447b3a28927169b83ea6, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -656,7 +658,7 @@ MonoBehaviour:
   m_Intensity: 1
   m_LightVolumeIntensity: 1
   m_LightVolumeEnabled: 0
-  m_ApplyToSortingLayers: 00000000
+  m_ApplyToSortingLayers: 00000000cbd2c1469dd3213059b33765d3de201c
   m_LightCookieSprite: {fileID: 0}
   m_DeprecatedPointLightCookieSprite: {fileID: 0}
   m_LightOrder: 0
@@ -986,7 +988,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   powerUpPrefabs:
   - {fileID: 1567757820}
-  spawnIntervalSeconds: 12
+  spawnEveryPlatforms: 20
   platformLayers:
     serializedVersion: 2
     m_Bits: 64
@@ -994,7 +996,7 @@ MonoBehaviour:
   horizontalPadding: 0.3
   overlapCheckSize: {x: 0.35, y: 0.35}
   maxAttempts: 15
-  maxConcurrent: 7
+  maxConcurrent: 15
 --- !u!4 &1518386180
 Transform:
   m_ObjectHideFlags: 0
@@ -1140,7 +1142,7 @@ BoxCollider2D:
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 18.60085, y: 1}
+  m_Size: {x: 19.364706, y: 1}
   m_EdgeRadius: 0
 --- !u!1001 &2568645373938528129
 PrefabInstance:
@@ -1339,6 +1341,18 @@ PrefabInstance:
       propertyPath: m_Sprite
       value: 
       objectReference: {fileID: 6734045621501434544, guid: da2d66c69def2a3498c36a362403debc, type: 3}
+    - target: {fileID: 8160106388089383520, guid: e4ca11e035d4a9949bc2bce2507044da, type: 3}
+      propertyPath: m_SortingLayer
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 8160106388089383520, guid: e4ca11e035d4a9949bc2bce2507044da, type: 3}
+      propertyPath: m_SortingOrder
+      value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 8160106388089383520, guid: e4ca11e035d4a9949bc2bce2507044da, type: 3}
+      propertyPath: m_SortingLayerID
+      value: 471916243
+      objectReference: {fileID: 0}
     - target: {fileID: 8426826470317143878, guid: e4ca11e035d4a9949bc2bce2507044da, type: 3}
       propertyPath: m_Name
       value: Player
@@ -1644,11 +1658,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8494595115338026239, guid: b4054dc3d97b95746816fbfbfba51bc8, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 3.19
+      value: 4.09
       objectReference: {fileID: 0}
     - target: {fileID: 8494595115338026239, guid: b4054dc3d97b95746816fbfbfba51bc8, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.79
+      value: -3.25
       objectReference: {fileID: 0}
     - target: {fileID: 8494595115338026239, guid: b4054dc3d97b95746816fbfbfba51bc8, type: 3}
       propertyPath: m_LocalPosition.z

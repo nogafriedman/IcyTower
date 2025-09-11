@@ -5,6 +5,7 @@ public class SpawnManager : MonoBehaviour
 {
     [Header("Player")]
     [SerializeField] private Transform player;
+    [SerializeField] private PowerUpSpawner2D powerUpSpawner;
 
     [Header("Walls")]
     [SerializeField] private GameObject wallPrefab;
@@ -69,7 +70,12 @@ public class SpawnManager : MonoBehaviour
 
             var Indextag = platform.GetComponent<PlatformIndex>() ?? platform.AddComponent<PlatformIndex>();
             Indextag.floorIndex = nextFloorIndex++;
-
+            var col = platform.GetComponent<Collider2D>();
+            if (col != null)
+            {
+                if (powerUpSpawner == null) powerUpSpawner = FindObjectOfType<PowerUpSpawner2D>();
+                powerUpSpawner.MaybePreplaceForFloor(Indextag.floorIndex, col);
+            }
             platformPool.Add(platform);
             nextPlatformY += platformSpacing;
         }

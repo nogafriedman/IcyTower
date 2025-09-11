@@ -5,7 +5,8 @@ using UnityEngine;
 public sealed class PowerUpSpawner2D : MonoBehaviour
 {
     [SerializeField] private GameObject[] powerUpPrefabs;   // ← multiple prefabs
-    [SerializeField] private float spawnIntervalSeconds = 12f;
+    [SerializeField] private int spawnEveryPlatforms = 20;
+    private int nextSpawnFloor = 20;
 
     // set  platform layers in the Inspector
     [SerializeField] private LayerMask platformLayers;
@@ -15,15 +16,15 @@ public sealed class PowerUpSpawner2D : MonoBehaviour
     [SerializeField] private float horizontalPadding = 0.3f;
     [SerializeField] private Vector2 overlapCheckSize = new Vector2(0.35f, 0.35f);
     [SerializeField] private int maxAttempts = 15;
-    [SerializeField] private int maxConcurrent = 1;
+    [SerializeField] private int maxConcurrent = 15;
 
     private readonly List<Collider2D> platforms = new();
-    private int activeCount;
+
 
     private void Start()
     {
         CollectPlatforms();
-        StartCoroutine(SpawnLoop());
+        nextSpawnFloor = spawnEveryPlatforms;
     }
 
     private void CollectPlatforms()
@@ -44,21 +45,6 @@ public sealed class PowerUpSpawner2D : MonoBehaviour
         }
     }
 
-    private IEnumerator SpawnLoop()
-    {
-        WaitForSeconds wait = new WaitForSeconds(spawnIntervalSeconds);
-
-        while (true)
-        {
-            if (activeCount < maxConcurrent && TrySpawn(out GameObject obj))
-            {
-                activeCount++;
-                OnDestroyNotify watcher = obj.AddComponent<OnDestroyNotify>();
-                watcher.OnDestroyed += () => activeCount--;
-            }
-            yield return wait;
-        }
-    }
 
     private bool TrySpawn(out GameObject instance)
     {
@@ -97,16 +83,71 @@ public sealed class PowerUpSpawner2D : MonoBehaviour
 
             GameObject prefab = powerUpPrefabs[Random.Range(0, powerUpPrefabs.Length)];
             instance = Instantiate(prefab, pos, Quaternion.identity);
+            Debug.Log($"[Spawner] Spawned at {pos} using {prefab.name}");
             return true;
         }
 
         return false;
     }
 
-
-    private sealed class OnDestroyNotify : MonoBehaviour
+    public void MaybePreplaceForFloor(int floorIndex, Collider2D platform)
     {
-        public System.Action OnDestroyed;
-        private void OnDestroy() => OnDestroyed?.Invoke();
+        // only at 20, 40, 60, ... (or whatever you set)
+        if (floorIndex < nextSpawnFloor) return;
+
+        // respect the max on-screen limit
+        int alive =
+#if UNITY_2023_1_OR_NEWER
+            UnityEngine.Object.FindObjectsByType<PowerUpPickup2D>(FindObjectsSortMode.None).Length;
+#else
+		UnityEngine.Object.FindObjectsOfType<PowerUpPickup2D>().Length;
+#endif
+        if (alive >= maxConcurrent) return;
+
+        if (platform == null) return;
+
+        // choose a point above this platform
+        Bounds b = platform.bounds;
+        float left = b.min.x + horizontalPadding;
+        float right = b.max.x - horizontalPadding;
+        if (right <= left) return;  // platform too narrow for our padding
+
+        Vector2 pos = new Vector2(Random.Range(left, right), b.max.y + verticalOffset);
+
+        // avoid overlaps with platform or other power-ups
+        if (Physics2D.OverlapBox(pos, overlapCheckSize, 0f, platformLayers) != null) return;
+        if (Physics2D.OverlapBox(pos, overlapCheckSize, 0f, LayerMask.GetMask("PowerUp")) != null) return;
+
+        // pick a prefab and spawn
+        if (powerUpPrefabs == null || powerUpPrefabs.Length == 0) return;
+        GameObject prefab = powerUpPrefabs[Random.Range(0, powerUpPrefabs.Length)];
+        Instantiate(prefab, pos, Quaternion.identity);
+
+        // schedule the next milestone (e.g., 20 → 40 → 60 ...)
+        nextSpawnFloor += spawnEveryPlatforms;
     }
+
+    public void NotifyReachedFloor(int floorIndex)
+    {
+        Debug.Log($"[Spawner] NotifyReachedFloor({floorIndex}) next={nextSpawnFloor}");
+        if (floorIndex < nextSpawnFloor) return;
+
+        int alive =
+#if UNITY_2023_1_OR_NEWER
+            UnityEngine.Object.FindObjectsByType<PowerUpPickup2D>(FindObjectsSortMode.None).Length;
+#else
+		UnityEngine.Object.FindObjectsOfType<PowerUpPickup2D>().Length;
+#endif
+        Debug.Log($"[Spawner] alive={alive} maxConcurrent={maxConcurrent}");
+
+        if (alive >= maxConcurrent) return;
+
+        if (TrySpawn(out _))
+        {
+            Debug.Log($"[Spawner] spawned power-up, next target = {nextSpawnFloor + spawnEveryPlatforms}");
+            nextSpawnFloor += spawnEveryPlatforms;
+        }
+    }
+    
+
 }
