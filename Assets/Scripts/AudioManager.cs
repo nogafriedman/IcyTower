@@ -35,6 +35,8 @@ public class AudioManager : MonoBehaviour
     [Header("Other SFX")]
     [SerializeField] private AudioClip sfxMilestone;
     [SerializeField] private AudioClip sfxCameraSpeedUp;
+    [SerializeField] private AudioClip sfxGameOver;
+
 
     private AudioSource _a, _b;
     private ComboTier _lastTier = ComboTier.None;
@@ -79,6 +81,8 @@ public class AudioManager : MonoBehaviour
 
     public void PlayMilestone() => Play(sfxMilestone);
     public void PlayCameraSpeedUp() => Play(sfxCameraSpeedUp);
+    public void PlayGameOver() => Play(sfxGameOver);
+
 
     private static ComboTier DetermineTier(int floors)
     {
