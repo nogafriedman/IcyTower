@@ -71,7 +71,7 @@ public class PlayerController2D : MonoBehaviour
         float inputX = Input.GetAxisRaw("Horizontal");
         float currSpeedX = rb.linearVelocity.x;
 
-        float accel = isGrounded ? moveAcceleration : moveAcceleration * 0.50f;
+        float accel = isGrounded ? moveAcceleration : moveAcceleration * 0.80f;
 
         // BOOST: apply boost to movement caps/forces
         float boost = speedBoost != null ? speedBoost.CurrentMultiplier : 1f;
@@ -103,6 +103,9 @@ public class PlayerController2D : MonoBehaviour
         {
             float horizontalBonus = Mathf.Min(Mathf.Abs(rb.linearVelocity.x) * HorizontalJumpBonus, maxHorizontalBonus);
             float totalJumpPower = Mathf.Min(jumpImpulse + horizontalBonus, maxJumpImpulse);
+
+            AudioManager.Instance?.PlayJumpByForce(totalJumpPower, jumpImpulse, maxJumpImpulse);
+
             rb.AddForce(Vector2.up * totalJumpPower, ForceMode2D.Force);
             jump = false;
         }
