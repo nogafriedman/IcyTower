@@ -77,9 +77,10 @@ public class ScoreManager : MonoBehaviour
             if (!comboActive)
             {
                 Debug.Log($"[Combo] Started at floor {LastLandedFloor} -> to {floor}");
-                PlayComboStartFX();
+                
                 AudioManager.Instance?.ResetComboTierProgress();
             }
+            PlayComboStartFX();
 
             comboJumpCount++;
             Debug.Log($"ComboJumpCount++: {comboJumpCount}");
@@ -127,27 +128,18 @@ public class ScoreManager : MonoBehaviour
 
     private void PlayComboStartFX()
     {
-        if (comboEffect == null) return;
-
-        // If the assigned particle is a prefab (not in scene), instantiate a one-shot
         if (!comboEffect.gameObject.scene.IsValid())
         {
             var pos = fxAnchor ? fxAnchor.position : Vector3.zero;
-            var ps = Instantiate(comboEffect, pos, Quaternion.identity);
-            ps.Play();
-
-            // auto-destroy after it finishes
-            var main = ps.main;
-            float life = main.duration + main.startLifetime.constantMax + 0.5f;
-            Destroy(ps.gameObject, life);
+            ParticlePool.Instance.PlayBurstWorld(pos, Quaternion.identity);
         }
         else
         {
-            // Scene particle: move to anchor (if any), restart cleanly
             if (fxAnchor) comboEffect.transform.position = fxAnchor.position;
             comboEffect.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
             comboEffect.Play(true);
         }
+
     }
 
 
