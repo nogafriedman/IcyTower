@@ -463,7 +463,10 @@ MonoBehaviour:
   targetObj: {fileID: 106243625}
   startThreshold: 5
   catchUpThreshold: 1
-  followSpeed: 2
+  baseSpeed: 2
+  speedStep: 0.5
+  incrementInterval: 30
+  maxSpeed: 10
 --- !u!1 &569976381
 GameObject:
   m_ObjectHideFlags: 0
@@ -1164,6 +1167,7 @@ MonoBehaviour:
   sfxSplendid: {fileID: 8300000, guid: 40ff9aacefee78a44b197b5f0e1c7bc6, type: 3}
   sfxNoWay: {fileID: 8300000, guid: b9bb8d11e5ca7124f8dacb32b143e3d2, type: 3}
   sfxMilestone: {fileID: 8300000, guid: 6b5232528c984214db662a7e4d4d3522, type: 3}
+  sfxCameraSpeedUp: {fileID: 8300000, guid: 1127e6144158e1149aba32a59de65427, type: 3}
 --- !u!4 &1899305086
 Transform:
   m_ObjectHideFlags: 0
@@ -1255,7 +1259,7 @@ BoxCollider2D:
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 17.233059, y: 1}
+  m_Size: {x: 21.937403, y: 1}
   m_EdgeRadius: 0
 --- !u!1001 &2568645373938528129
 PrefabInstance:
@@ -1314,9 +1318,25 @@ PrefabInstance:
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5564034349649016941, guid: 6d510145766ef2e4fa966a94fdf24eb4, type: 3}
+      propertyPath: m_UseCustomVertexStreams
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5564034349649016941, guid: 6d510145766ef2e4fa966a94fdf24eb4, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
       objectReference: {fileID: 2100000, guid: 0ea4c3c206a5e3241a79bb10267332a3, type: 2}
+    - target: {fileID: 5564034349649016941, guid: 6d510145766ef2e4fa966a94fdf24eb4, type: 3}
+      propertyPath: m_VertexStreams.Array.size
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 5564034349649016941, guid: 6d510145766ef2e4fa966a94fdf24eb4, type: 3}
+      propertyPath: 'm_VertexStreams.Array.data[1]'
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 5564034349649016941, guid: 6d510145766ef2e4fa966a94fdf24eb4, type: 3}
+      propertyPath: 'm_VertexStreams.Array.data[2]'
+      value: 4
+      objectReference: {fileID: 0}
     - target: {fileID: 5743464073017733313, guid: 6d510145766ef2e4fa966a94fdf24eb4, type: 3}
       propertyPath: looping
       value: 0
@@ -1391,7 +1411,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5743464073017733313, guid: 6d510145766ef2e4fa966a94fdf24eb4, type: 3}
       propertyPath: InitialModule.startSize.scalar
-      value: 4
+      value: 0.5
       objectReference: {fileID: 0}
     - target: {fileID: 5743464073017733313, guid: 6d510145766ef2e4fa966a94fdf24eb4, type: 3}
       propertyPath: InitialModule.startSpeed.scalar
