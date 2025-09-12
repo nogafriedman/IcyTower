@@ -7,7 +7,7 @@ public class ScoreManager : MonoBehaviour
 {
     // public TextMeshProUGUI scoreText;
 
-    [SerializeField] private float comboTimeout = 20f;
+    [SerializeField] private float comboTimeout = 3f;
 
     public int HighestFloor { get; private set; } = 0;
     public int LastLandedFloor { get; private set; } = 0;
@@ -28,16 +28,10 @@ public class ScoreManager : MonoBehaviour
     private int nextMilestone = 100;
 
 
-    private int lastProcessedFloor = -1;
-
-
     void Update() => UpdateComboTimeout();
 
     public void UpdateComboTimeout()
     {
-
-        if (comboJumpCount == 0) return;
-
         comboTimerLeft -= Time.deltaTime;
         if (comboTimerLeft <= 0f)
         {
@@ -64,8 +58,6 @@ public class ScoreManager : MonoBehaviour
     // called on each valid landing on a floor
     public void UpdateState(int floor)
     {
-        if (floor == lastProcessedFloor) return;
-        // if (floor <= LastLandedFloor) return;
         if (floor > HighestFloor)
         {
             SetHighestFloor(floor);
@@ -73,7 +65,6 @@ public class ScoreManager : MonoBehaviour
 
         UpdateCombo(floor);
         LastLandedFloor = floor;
-        lastProcessedFloor = floor;
     }
 
     public void UpdateCombo(int floor)
@@ -82,7 +73,6 @@ public class ScoreManager : MonoBehaviour
 
         if (diff >= 2)
         {
-
             if (comboJumpCount == 0)
             {
                 Debug.Log($"[Combo] Started at floor {LastLandedFloor} -> to {floor}");
@@ -91,10 +81,10 @@ public class ScoreManager : MonoBehaviour
             }
 
             comboJumpCount++;
-            Debug.Log($"ComboJumpCount++: {comboJumpCount}");  
+            Debug.Log($"ComboJumpCount++: {comboJumpCount}");
             comboFloorsTotal += diff;
             comboTimerLeft = comboTimeout;
-            Debug.Log($"[Combo] comboJumpCount: {comboJumpCount} | ComboFloorsTotal: {comboFloorsTotal}");
+            Debug.Log($"[Combo] ComboFloorsTotal: {comboFloorsTotal} | comboJumpCount: {comboJumpCount}");
 
             // Notify listeners that combo tier changed
             AudioManager.Instance?.OnComboFloorsProgress(comboFloorsTotal);
@@ -105,10 +95,6 @@ public class ScoreManager : MonoBehaviour
             {
                 Debug.Log("[Combo] END (single/zero step)");
                 EndCombo();
-            }
-            else
-            {
-                Debug.Log($"Entered diff < 2, ComboJumpCount == 0 (combo not active");
             }
         }
     }

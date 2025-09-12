@@ -199,17 +199,17 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   powerUpSpawner: {fileID: 0}
   scoreManager: {fileID: 1156471976}
-  moveAcceleration: 500
-  maxSpeed: 7
-  jumpImpulse: 800
+  moveAcceleration: 360
+  maxSpeed: 5
+  jumpImpulse: 500
   maxJumpImpulse: 1500
-  HorizontalJumpBonus: 300
-  maxHorizontalBonus: 600
+  HorizontalJumpBonus: 1000
+  maxHorizontalBonus: 900
   ascendGravityScale: 0.75
   fallGravityScale: 1.5
   jumpSustainTime: 0.12
   jumpSustainForce: 18
-  wallBounceMultiplier: 1.5
+  wallBounceMultiplier: 2
   maxBounceSpeed: 50
   groundCheck: {fileID: 1407644809}
   groundCheckRadius: 0.12
@@ -905,7 +905,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7131b74c5d8228c45b1bfe6f6303d84a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  comboTimeout: 20
+  comboTimeout: 3
   comboJumpCount: 0
   comboFloorsTotal: 0
   comboTimerLeft: 0
@@ -1206,8 +1206,6 @@ GameObject:
   m_Component:
   - component: {fileID: 1899305086}
   - component: {fileID: 1899305085}
-  - component: {fileID: 1899305084}
-  - component: {fileID: 1899305083}
   m_Layer: 0
   m_Name: AudioManager
   m_TagString: Untagged
@@ -1215,115 +1213,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!82 &1899305083
-AudioSource:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1899305082}
-  m_Enabled: 1
-  serializedVersion: 4
-  OutputAudioMixerGroup: {fileID: 0}
-  m_audioClip: {fileID: 0}
-  m_Resource: {fileID: 0}
-  m_PlayOnAwake: 1
-  m_Volume: 1
-  m_Pitch: 1
-  Loop: 0
-  Mute: 0
-  Spatialize: 0
-  SpatializePostEffects: 0
-  Priority: 128
-  DopplerLevel: 1
-  MinDistance: 1
-  MaxDistance: 500
-  Pan2D: 0
-  rolloffMode: 0
-  BypassEffects: 0
-  BypassListenerEffects: 0
-  BypassReverbZones: 0
-  rolloffCustomCurve:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 1
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0.33333334
-      outWeight: 0.33333334
-    - serializedVersion: 3
-      time: 1
-      value: 0
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0.33333334
-      outWeight: 0.33333334
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
-  panLevelCustomCurve:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 0
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0.33333334
-      outWeight: 0.33333334
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
-  spreadCustomCurve:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 0
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0.33333334
-      outWeight: 0.33333334
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
-  reverbZoneMixCustomCurve:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 1
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0.33333334
-      outWeight: 0.33333334
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
---- !u!114 &1899305084
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1899305082}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7cd23a9781ab7fa45a627917d8b429cf, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!114 &1899305085
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1336,6 +1225,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a80cce4c616ad7e4d8ff1255b0bd62b0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  jumpLow: {fileID: 8300000, guid: c6f8fffe94f03274a99adcb3910b897e, type: 3}
+  jumpMid: {fileID: 8300000, guid: b654aa3f97a713a4f9bf2712d8609f6d, type: 3}
+  jumpHigh: {fileID: 8300000, guid: 4bd9fe3117dcdae42bfe31d8e8f18dd6, type: 3}
   sfxGood: {fileID: 8300000, guid: 418ca8df0cc536b4880c223a77012ddc, type: 3}
   sfxSweet: {fileID: 8300000, guid: 5b903dbceede5bd4a866fc5f48abbb58, type: 3}
   sfxGreat: {fileID: 8300000, guid: 3c41ff390df470c49b7ae59501bb57c0, type: 3}
@@ -1438,7 +1330,7 @@ BoxCollider2D:
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 19.033852, y: 1}
+  m_Size: {x: 25.02106, y: 1}
   m_EdgeRadius: 0
 --- !u!1001 &2568645373938528129
 PrefabInstance:
