@@ -22,6 +22,7 @@ public class ScoreManager : MonoBehaviour
 
     public int totalScore = 0;
     public int CurrentScore => HighestFloor * 10 + confirmedComboScore;
+    private bool comboActive => comboJumpCount > 0;
 
     // effects
     [SerializeField] private int milestoneStep = 100; // every 100 floors
@@ -33,7 +34,7 @@ public class ScoreManager : MonoBehaviour
     public void UpdateComboTimeout()
     {
         comboTimerLeft -= Time.deltaTime;
-        if (comboTimerLeft <= 0f)
+        if (comboActive && comboTimerLeft <= 0f)
         {
             Debug.Log("Combo Timeout, ending combo");
             EndCombo();
@@ -73,7 +74,7 @@ public class ScoreManager : MonoBehaviour
 
         if (diff >= 2)
         {
-            if (comboJumpCount == 0)
+            if (!comboActive)
             {
                 Debug.Log($"[Combo] Started at floor {LastLandedFloor} -> to {floor}");
                 PlayComboStartFX();
@@ -91,7 +92,7 @@ public class ScoreManager : MonoBehaviour
         }
         else
         {
-            if (comboJumpCount > 0)
+            if (comboActive)
             {
                 Debug.Log("[Combo] END (single/zero step)");
                 EndCombo();
@@ -125,30 +126,29 @@ public class ScoreManager : MonoBehaviour
     public int GameOverScore() => CurrentScore;
 
     private void PlayComboStartFX()
-{
-    if (comboEffect == null) return;
-
-    // If the assigned particle is a prefab (not in scene), instantiate a one-shot
-    if (!comboEffect.gameObject.scene.IsValid())
     {
-        var pos = fxAnchor ? fxAnchor.position : Vector3.zero;
-        var ps = Instantiate(comboEffect, pos, Quaternion.identity);
-        ps.Play();
+        if (comboEffect == null) return;
 
-        // auto-destroy after it finishes
-        var main = ps.main;
-        float life = main.duration + main.startLifetime.constantMax + 0.5f;
-        Destroy(ps.gameObject, life);
-    }
-    else
-    {
-        // Scene particle: move to anchor (if any), restart cleanly
-        if (fxAnchor) comboEffect.transform.position = fxAnchor.position;
-        comboEffect.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
-        comboEffect.Play(true);
-    }
-}
+        // If the assigned particle is a prefab (not in scene), instantiate a one-shot
+        if (!comboEffect.gameObject.scene.IsValid())
+        {
+            var pos = fxAnchor ? fxAnchor.position : Vector3.zero;
+            var ps = Instantiate(comboEffect, pos, Quaternion.identity);
+            ps.Play();
 
+            // auto-destroy after it finishes
+            var main = ps.main;
+            float life = main.duration + main.startLifetime.constantMax + 0.5f;
+            Destroy(ps.gameObject, life);
+        }
+        else
+        {
+            // Scene particle: move to anchor (if any), restart cleanly
+            if (fxAnchor) comboEffect.transform.position = fxAnchor.position;
+            comboEffect.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            comboEffect.Play(true);
+        }
+    }
 
 
     //helper

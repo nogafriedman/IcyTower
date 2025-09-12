@@ -5,6 +5,13 @@ public class AudioManager : MonoBehaviour
     // Singleton instance
     public static AudioManager Instance { get; private set; }
 
+    [Header("Background SFX")]
+    public AudioClip sfxBackground;
+    [Range(0f,1f)] public float musicVolume = 0.75f;
+    [SerializeField] bool musicPlayOnStart = true;
+    private AudioSource _music;
+
+
     [Header("Jump SFX")]
     public AudioClip jumpLow;
     public AudioClip jumpMid;
@@ -42,6 +49,19 @@ public class AudioManager : MonoBehaviour
         _b = gameObject.AddComponent<AudioSource>();
         _a.playOnAwake = _b.playOnAwake = false;
         _a.spatialBlend = _b.spatialBlend = 0f;
+
+        _music = gameObject.AddComponent<AudioSource>();
+        _music.spatialBlend = 0f;
+        _music.loop = true;
+        _music.volume = musicVolume;
+        _music.playOnAwake = false;
+        _music.clip = sfxBackground;
+    }
+
+    void Start()
+    {
+        if (musicPlayOnStart && _music.clip)     // <- explicitly start here
+            _music.Play();
     }
 
     // Combo Sounds
