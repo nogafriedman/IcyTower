@@ -1,8 +1,8 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public class AudioManager : MonoBehaviour
 {
-    // Singleton instance
     public static AudioManager Instance { get; private set; }
 
     [Header("Background SFX")]
@@ -12,12 +12,10 @@ public class AudioManager : MonoBehaviour
     private AudioSource _music;
 
 
-    [Header("Jump SFX")]
-    public AudioClip jumpLow;
-    public AudioClip jumpMid;
-    public AudioClip jumpHigh;
+    [Header("Active Voice Set")]
+    [SerializeField] private CharacterVoiceSet activeVoiceSet;
 
-    
+
     public enum ComboTier { None, Good, Sweet, Great, Super, Wow, Amazing, Extreme, Fantastic, Splendid, NoWay }
 
     [Header("Combo Tier SFX")]
@@ -31,6 +29,7 @@ public class AudioManager : MonoBehaviour
     [SerializeField] private AudioClip sfxFantastic;
     [SerializeField] private AudioClip sfxSplendid;
     [SerializeField] private AudioClip sfxNoWay;
+
 
     [Header("Other SFX")]
     [SerializeField] private AudioClip sfxMilestone;
@@ -62,8 +61,13 @@ public class AudioManager : MonoBehaviour
 
     void Start()
     {
-        if (musicPlayOnStart && _music.clip)     // <- explicitly start here
+        if (musicPlayOnStart && _music.clip)
             _music.Play();
+    }
+    
+    public void SetCharacterVoice(CharacterVoiceSet voiceSet)
+    {
+        activeVoiceSet = voiceSet;
     }
 
     // Combo Sounds
@@ -77,12 +81,13 @@ public class AudioManager : MonoBehaviour
         }
     }
 
-    public void ResetComboTierProgress() => _lastTier = ComboTier.None;
-
     public void PlayMilestone() => Play(sfxMilestone);
     public void PlayCameraSpeedUp() => Play(sfxCameraSpeedUp);
     public void PlayGameOver() => Play(sfxGameOver);
 
+
+    // Combo SFX Functions
+    public void ResetComboTierProgress() => _lastTier = ComboTier.None;
 
     private static ComboTier DetermineTier(int floors)
     {
@@ -116,31 +121,30 @@ public class AudioManager : MonoBehaviour
         }
     }
 
-    // Jump Sounds
-    // public void PlayJumpByForce(float totalForce, float baseForce, float highRefForce)
-    // {
-    //     if (!jumpLow && !jumpMid && !jumpHigh) return;
 
-    //     // Normalize how "strong" the jump is in [0,1], using base as 0 and highRef as 1
-    //     float t = 0f;
-    //     if (highRefForce > baseForce)
-    //         t = Mathf.InverseLerp(baseForce, highRefForce, totalForce);
-
-    //     // Thresholds—tweak to taste
-    //     if (t >= 0.85f) Play(jumpHigh);
-    //     else if (t >= 0.35f) Play(jumpMid);
-    //     else Play(jumpLow);
-    // }
+    // Jump SFX
     public void PlayJumpByForce(float totalForce, float baseForce, float highRefForce)
     {
-        float midThreshold  = baseForce * 1.2f;      // ~1200
-        float highThreshold = baseForce * 1.8f;      // ~1500
+        float midThreshold = baseForce * 1.2f;
+        float highThreshold = baseForce * 1.8f;
 
-        if (totalForce >= highThreshold)       Play(jumpHigh);
-        else if (totalForce >= midThreshold)   Play(jumpMid);
-        else                                   Play(jumpLow);
+        if (totalForce >= highThreshold)
+            Play(GetRandom(activeVoiceSet.jumpHigh));
+        else if (totalForce >= midThreshold)
+            Play(GetRandom(activeVoiceSet.jumpMid));
+        else
+            Play(GetRandom(activeVoiceSet.jumpLow));
     }
 
+    private AudioClip GetRandom(List<AudioClip> clips)
+    {
+        if (clips == null || clips.Count == 0) return null;
+        if (clips.Count == 1) return clips[0];
+        return clips[Random.Range(0, clips.Count)];
+    }
+
+
+    // General
 
     private void Play(AudioClip clip)
     {

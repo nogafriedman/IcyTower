@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 public class BouncyPlatforms : MonoBehaviour
 {
-    public float jumpForce = 20f;
+    public float jumpForce = 30f;
 
     private void OnCollisionEnter2D(Collision2D collision)
     {

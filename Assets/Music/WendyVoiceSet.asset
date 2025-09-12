@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 687f1c22223a382458b5f344978b2991, type: 3}
+  m_Name: WendyVoiceSet
+  m_EditorClassIdentifier: 
+  jumpLow:
+  - {fileID: 8300000, guid: d91a4a4b001416247936d69ff64b0e00, type: 3}
+  jumpMid:
+  - {fileID: 8300000, guid: ddfa038a1a972e04a9deaec9b0b2698d, type: 3}
+  jumpHigh:
+  - {fileID: 8300000, guid: 554a55041e811314cb160c47694a7388, type: 3}
+  - {fileID: 8300000, guid: 980c89547c36d9542ac8b113ab263d1b, type: 3}
+  - {fileID: 8300000, guid: ddfa038a1a972e04a9deaec9b0b2698d, type: 3}
