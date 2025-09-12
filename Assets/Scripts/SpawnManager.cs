@@ -27,6 +27,10 @@ public class SpawnManager : MonoBehaviour
     [SerializeField] private Color bouncyColor = Color.green;
     [SerializeField] private Color normalColor = Color.white;
 
+    [Header("Sticky Settings")]                       
+    [SerializeField, Range(0f, 1f)] private float stickyChance = 0.2f;
+    [SerializeField] private Color stickyColor = Color.yellow;
+
     private int nextFloorIndex = 1;
 
     private readonly List<GameObject> leftWallPool = new List<GameObject>();
@@ -82,7 +86,7 @@ public class SpawnManager : MonoBehaviour
                 if (powerUpSpawner == null) powerUpSpawner = FindObjectOfType<PowerUpSpawner2D>();
                 powerUpSpawner.MaybePreplaceForFloor(Indextag.floorIndex, col);
             }
-            MakePlatformBouncy(platform);
+            AssignPlatformType(platform);
             platformPool.Add(platform);
             nextPlatformY += platformSpacing;
         }
@@ -116,41 +120,74 @@ public class SpawnManager : MonoBehaviour
 
         var indexTag = platform.GetComponent<PlatformIndex>() ?? platform.AddComponent<PlatformIndex>();
         indexTag.floorIndex = nextFloorIndex++;
-        MakePlatformBouncy(platform);
+        AssignPlatformType(platform);
         nextPlatformY += platformSpacing;
     }
 
-    private void MakePlatformBouncy(GameObject platform)
+    private void AssignPlatformType(GameObject platform)
     {
-        bool isBouncy = Random.value < bouncyChance;
+        StickyPlatforms sticky = platform.GetComponent<StickyPlatforms>();
+        BouncyPlatforms bouncy = platform.GetComponent<BouncyPlatforms>();
+        SpriteRenderer sr = platform.GetComponent<SpriteRenderer>();
 
-        if (isBouncy)
+        if (sticky != null)
         {
-            if (platform.GetComponent<BouncyPlatforms>() == null)
+            sticky.ResetSticky();
+        }
+
+        float roll = UnityEngine.Random.value;
+
+        if (roll < bouncyChance)
+        {
+            if (bouncy == null)
             {
                 platform.AddComponent<BouncyPlatforms>();
             }
 
-            var spriteRenderer = platform.GetComponent<SpriteRenderer>();
-            if (spriteRenderer != null)
+            if (sticky != null)
             {
-                spriteRenderer.color = bouncyColor;
+                Destroy(sticky);
             }
 
+            if (sr != null)
+            {
+                sr.color = bouncyColor;
+            }
+        }
+        else if (roll < bouncyChance + stickyChance)
+        {
+            if (sticky == null)
+            {
+                platform.AddComponent<StickyPlatforms>();
+            }
+
+            if (bouncy != null)
+            {
+                Destroy(bouncy);
+            }
+
+            if (sr != null)
+            {
+                sr.color = stickyColor;
+            }
         }
         else
         {
-            var bounce = platform.GetComponent<BouncyPlatforms>();
-            if (bounce != null)
+            if (sticky != null)
             {
-                Destroy(bounce);
+                Destroy(sticky);
             }
 
-            var spriteRenderer = platform.GetComponent<SpriteRenderer>();
-            if (spriteRenderer != null)
+            if (bouncy != null)
             {
-                spriteRenderer.color = normalColor;
+                Destroy(bouncy);
+            }
+
+            if (sr != null)
+            {
+                sr.color = normalColor;
             }
         }
     }
+
 }
