@@ -1,155 +1,209 @@
+using System.Collections;
 using UnityEngine;
 
-[RequireComponent(typeof(Rigidbody2D))]
 public class PlayerController2D : MonoBehaviour
 {
-    [Header("References")]
-    [SerializeField] Transform groundCheck;        // child at feet
-    [SerializeField] LayerMask groundMask;
+    [SerializeField] private PowerUpSpawner2D powerUpSpawner;
+    public ScoreManager scoreManager;
+    private Rigidbody2D rb;
 
-    [Header("Run")]
-    [SerializeField] float maxRunSpeed = 12f;
-    [SerializeField] float runAccel = 90f;         // accel on ground
-    [SerializeField] float runDecel = 100f;        // decel on ground
-    [SerializeField, Range(0f,1f)] float airControl = 0.6f;
+    [Header("Movement")]
+    public float moveAcceleration = 360f;
+    public float maxSpeed = 5f;
+    private float baseMoveAcceleration;
+    private float baseMaxSpeed;
+    private Coroutine moveBoostRoutine;
 
-    [Header("Jump")]
-    [SerializeField] float jumpVelocity = 16f;
-    [SerializeField] float coyoteTime = 0.1f;      // grace after leaving ledge
-    [SerializeField] float jumpBuffer = 0.12f;     // press jump slightly early
+    [Header("Jumping")]
+    private bool jump = false;
+    public float jumpImpulse = 1200f;
+    public float maxJumpImpulse = 1500f;
+    public float HorizontalJumpBonus = 100f;
+    public float maxHorizontalBonus = 200f;
 
-    [Header("Better Jump")]
-    [SerializeField] float fallGravityMul = 2.0f;  // extra gravity when falling
-    [SerializeField] float jumpCutMul = 2.5f;      // extra gravity when jump released early
-    [SerializeField] float maxFallSpeed = -25f;
-    [SerializeField] float fastFallMul = 2.2f;     // down key pressed
+    [Header("Airtime / Floatiness")]
+    // Gravity scale while ascending and jump is still held (< 1 = floatier)
+    public float ascendGravityScale = 0.75f;
+    // Gravity scale while falling (≈1 stays floaty; >1 falls faster)
+    public float fallGravityScale = 1.5f;
+    // Extra upward force time while holding Jump after takeoff
+    public float jumpSustainTime = 0.12f;
+    // FixedUpdate upward force during sustain
+    public float jumpSustainForce = 18f;
+    private float sustainTimer;
 
-    [Header("Ground Check")]
-    [SerializeField] float groundCheckRadius = 0.18f;
+    [Header("Walls")]
+    public float wallBounceMultiplier = 1.25f;
+    public float maxBounceSpeed = 8f;
 
-    public enum InputMode { Keyboard, Touch }
+    [Header("GroundCheck")]
+    private bool isGrounded;
+    private int groundMask;
+    private IncreasePlayerSpeed speedBoost;
+    [SerializeField] private Transform groundCheck;
+    [SerializeField] private float groundCheckRadius = 0.12f;
 
-    [Header("Input Source")]
-    [SerializeField] InputMode inputMode = InputMode.Keyboard;
+    [Header("Layers")]
+    [SerializeField] private LayerMask groundLayers;
+    [SerializeField] private LayerMask wallLayers;
 
-    Rigidbody2D rb;
-    IPlayerInput input;
-
-    // state
-    bool isGrounded;
-    float lastGroundedTime;
-    float lastJumpPressedTime;
-
-    // cached
-    const float EPS = 0.001f;
-
-    void Awake()
+    private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
-        rb.freezeRotation = true;
-        rb.interpolation = RigidbodyInterpolation2D.Interpolate;
+        groundMask = LayerMask.GetMask("Ground");
+        baseMoveAcceleration = moveAcceleration;
+        baseMaxSpeed = maxSpeed;
+
     }
 
-    void Start()
+    private void Update()
     {
-        SwitchInput(inputMode);
-    }
-
-    void SwitchInput(InputMode mode)
-    {
-        inputMode = mode;
-        input = (mode == InputMode.Keyboard) ? (IPlayerInput)new KeyboardInput()
-                                             : (IPlayerInput)new TouchInput();
-    }
-
-    void Update()
-    {
-        // Swap inputs at runtime (optional, for testing)
-        if (Application.isEditor)
+        isGrounded = groundCheck && Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, groundLayers);
+        if (Input.GetButtonDown("Jump") && isGrounded)
         {
-            if (Input.GetKeyDown(KeyCode.F1)) SwitchInput(InputMode.Keyboard);
-            if (Input.GetKeyDown(KeyCode.F2)) SwitchInput(InputMode.Touch);
-        }
-
-        input.UpdateInput();
-
-        // Timers for coyote & buffer
-        if (IsOnGround()) { isGrounded = true; lastGroundedTime = coyoteTime; }
-        else              { isGrounded = false; lastGroundedTime -= Time.deltaTime; }
-
-        if (input.JumpPressed) lastJumpPressedTime = jumpBuffer;
-        else                   lastJumpPressedTime -= Time.deltaTime;
-
-        // Try to jump in Update (read inputs here), apply in FixedUpdate via velocity set
-        if (CanJump())
-        {
-            DoJump();
-        }
-
-        // Variable jump: if player releases jump early and is rising, apply extra gravity
-        if (!isGrounded && rb.linearVelocity.y > 0f && !input.JumpHeld)
-        {
-            rb.linearVelocity = new Vector2(rb.linearVelocity.x, rb.linearVelocity.y + (jumpCutMul -1f) * Physics2D.gravity.y * Time.deltaTime);
-        }
-
-        // Fast fall
-        if (Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.DownArrow))
-        {
-            // Extra gravity when pressing down (keyboard only; on touch you could map a two-finger hold)
-            rb.linearVelocity = new Vector2(rb.linearVelocity.x,
-                Mathf.Max(maxFallSpeed, rb.linearVelocity.y + Physics2D.gravity.y * (fastFallMul - 1f) * Time.deltaTime));
+            jump = true;
+            sustainTimer = jumpSustainTime;
         }
     }
 
-    void FixedUpdate()
+    private void FixedUpdate()
     {
-        // Horizontal movement
-        float targetSpeed = input.MoveX * maxRunSpeed;
-        float speedDif = targetSpeed - rb.linearVelocity.x;
+        float inputX = Input.GetAxisRaw("Horizontal");
+        float currSpeedX = rb.linearVelocity.x;
 
-        float accelRate = 0f;
-        if (Mathf.Abs(targetSpeed) > EPS)
-            accelRate = isGrounded ? runAccel : runAccel * airControl;
+        float accel = isGrounded ? moveAcceleration : moveAcceleration * 0.50f;
+
+        // BOOST: apply boost to movement caps/forces
+        float boost = speedBoost != null ? speedBoost.CurrentMultiplier : 1f;
+        float boostedMaxSpeed = maxSpeed * boost;
+        float boostedAcceleration = moveAcceleration * boost;
+
+        if (Mathf.Abs(inputX) > 0.05f)
+        {
+            rb.AddForce(new Vector2(inputX * accel, 0f));
+        }
         else
-            accelRate = isGrounded ? runDecel : runDecel * airControl;
-
-        float movement = speedDif * accelRate * Time.fixedDeltaTime;
-        rb.linearVelocity = new Vector2(rb.linearVelocity.x + movement, rb.linearVelocity.y);
-
-        // Better fall gravity (when moving downward)
-        if (rb.linearVelocity.y < -EPS)
         {
-            float extraG = (fallGravityMul - 1f) * Physics2D.gravity.y * Time.fixedDeltaTime;
-            rb.linearVelocity = new Vector2(rb.linearVelocity.x, Mathf.Max(maxFallSpeed, rb.linearVelocity.y + extraG));
+            // faster decel on ground, gentle in air
+            float decel = isGrounded ? 20f : 4f;
+            rb.linearVelocity = new Vector2(
+                Mathf.MoveTowards(currSpeedX, 0f, decel * Time.fixedDeltaTime),
+                rb.linearVelocity.y
+            );
+        }
+
+        // hard cap X speed (lower cap in air)
+        float cap = isGrounded ? maxSpeed : maxSpeed * 0.95f;
+        rb.linearVelocity = new Vector2(
+            Mathf.Clamp(rb.linearVelocity.x, -cap, cap),
+            rb.linearVelocity.y
+        );
+
+        if (jump)
+        {
+            float horizontalBonus = Mathf.Min(Mathf.Abs(rb.linearVelocity.x) * HorizontalJumpBonus, maxHorizontalBonus);
+            float totalJumpPower = Mathf.Min(jumpImpulse + horizontalBonus, maxJumpImpulse);
+            rb.AddForce(Vector2.up * totalJumpPower, ForceMode2D.Force);
+            jump = false;
+        }
+
+        if (sustainTimer > 0f && Input.GetButton("Jump") && rb.linearVelocity.y > 0f)
+        {
+            rb.AddForce(Vector2.up * jumpSustainForce, ForceMode2D.Force);
+            sustainTimer -= Time.fixedDeltaTime;
+        }
+
+        if (rb.linearVelocity.y > 0f)
+        {
+            rb.gravityScale = Input.GetButton("Jump") ? ascendGravityScale : fallGravityScale;
+        }
+        else if (rb.linearVelocity.y < 0f)
+        {
+            rb.gravityScale = fallGravityScale;
+        }
+        else
+        {
+            rb.gravityScale = 1f;
+        }
+
+    }
+
+    private bool IsInLayerMask(GameObject obj, LayerMask mask)
+    {
+        return (mask.value & (1 << obj.layer)) != 0;
+    }
+
+
+// private void OnTriggerEnter2D(Collider2D other)
+// {
+//     if (!IsInLayerMask(other.gameObject, groundLayers)) return;
+
+//     Debug.Log($"[Player] OnTriggerEnter");
+
+//     // Must be falling (ignore when coming up through
+//     //  the effector)
+//     if (rb.linearVelocity.y > -0.01f) return;
+//     Debug.Log($"[Player] OnTriggerEnter passed falling check");
+
+//     var idxComp = other.GetComponentInParent<PlatformIndex>();
+//     if (idxComp == null) return;
+
+//     int idx = idxComp.floorIndex;
+
+//     if (idx == _lastScoredFloor || Time.frameCount == _lastLandingFrame) return;
+
+//     _lastScoredFloor = idx;
+//     _lastLandingFrame = Time.frameCount;
+
+
+//         // Update score and notify spawner
+//         scoreManager.UpdateState(idx);
+//     if (powerUpSpawner == null) powerUpSpawner = FindObjectOfType<PowerUpSpawner2D>();
+//     powerUpSpawner?.NotifyReachedFloor(idx);
+// }
+
+
+    private void OnCollisionEnter2D(Collision2D collision)
+    {
+        if (IsInLayerMask(collision.gameObject, wallLayers))
+        {
+            Vector2 v = new Vector2(rb.linearVelocity.x * wallBounceMultiplier, rb.linearVelocityY * 0.2f);
+            rb.AddForce(v, ForceMode2D.Impulse);
+        }
+
+        // Collision with platform (update score):
+        if (IsInLayerMask(collision.gameObject, groundLayers) && collision.gameObject.TryGetComponent<PlatformIndex>(out var p) && isGrounded)
+        {
+            int idx = (int)p.floorIndex;
+            scoreManager.UpdateState(idx);
+            if (powerUpSpawner == null) powerUpSpawner = FindObjectOfType<PowerUpSpawner2D>();
+            Debug.Log($"[Player] OncollisionEnter: floor {idx}");
+            powerUpSpawner?.NotifyReachedFloor(idx);
         }
     }
-
-    bool CanJump()
+    public void ApplyTemporaryMovementBoost(float multiplier, float durationSeconds)
     {
-        return lastGroundedTime > 0f && lastJumpPressedTime > 0f;
-    }
-
-    void DoJump()
-    {
-        rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpVelocity);
-        lastJumpPressedTime = 0f;
-        lastGroundedTime = 0f;
-    }
-
-    bool IsOnGround()
-    {
-        if (!groundCheck) return false;
-        return Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, groundMask);
-    }
-
-#if UNITY_EDITOR
-    void OnDrawGizmosSelected()
-    {
-        if (groundCheck)
+        if (moveBoostRoutine != null)
         {
-            Gizmos.color = Color.green;
-            Gizmos.DrawWireSphere(groundCheck.position, groundCheckRadius);
+            StopCoroutine(moveBoostRoutine);
+            ResetMovementToBase();
         }
+        moveBoostRoutine = StartCoroutine(DoMovementBoost(multiplier, durationSeconds));
     }
-#endif
+
+    private IEnumerator DoMovementBoost(float multiplier, float durationSeconds)
+    {
+        moveAcceleration = baseMoveAcceleration * multiplier;
+        maxSpeed = baseMaxSpeed * multiplier;
+        yield return new WaitForSeconds(durationSeconds);
+        ResetMovementToBase();
+        moveBoostRoutine = null;
+    }
+
+    private void ResetMovementToBase()
+    {
+        moveAcceleration = baseMoveAcceleration;
+        maxSpeed = baseMaxSpeed;
+    }
+
 }

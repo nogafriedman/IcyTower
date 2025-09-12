@@ -1,24 +1,30 @@
-# Unity generated folders
+cat > .gitignore << 'EOF'
 [Ll]ibrary/
 [Tt]emp/
-[Bb]uild*/
-[Ll]ogs/
 [Oo]bj/
-[Bb]in/
-UserSettings/
-
-# Rider / VS / VSCode files
+[Bb]uild*/
+[Bb]uilds/
+[Ll]ogs/
+[Uu]ser[Ss]ettings/
+[Mm]emoryCaptures/
+[Rr]ecordings/
+.vs/
+.gradle/
+ExportedObj/
+.consulo/
 *.csproj
-*.unityproj
 *.sln
-*.suo
-*.tmp
 *.user
 *.userprefs
-.vscode/
-.idea/
-.vs/
+*.pidb
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
+*.unitypackage
+*.apk
+*.aab
+*.app
+*.log
+EOF
 
-# OS files
-.DS_Store
-Thumbs.db

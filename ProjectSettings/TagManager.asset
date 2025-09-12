@@ -12,9 +12,9 @@ TagManager:
   - Water
   - UI
   - Ground
-  - 
-  - 
-  - 
+  - Wall
+  - Player
+  - PowerUp
   - 
   - 
   - 
@@ -40,6 +40,18 @@ TagManager:
   m_SortingLayers:
   - name: Default
     uniqueID: 0
+    locked: 0
+  - name: Background
+    uniqueID: 1187107531
+    locked: 0
+  - name: Platforms
+    uniqueID: 807523229
+    locked: 0
+  - name: PowerUp
+    uniqueID: 1698149209
+    locked: 0
+  - name: Player
+    uniqueID: 471916243
     locked: 0
   m_RenderingLayers:
   - Default
