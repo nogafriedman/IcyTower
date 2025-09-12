@@ -83,7 +83,7 @@ public class SpawnManager : MonoBehaviour
             var col = platform.GetComponent<Collider2D>();
             if (col != null)
             {
-                if (powerUpSpawner == null) powerUpSpawner = FindObjectOfType<PowerUpSpawner2D>();
+                if (powerUpSpawner == null) powerUpSpawner = FindFirstObjectByType<PowerUpSpawner2D>();
                 powerUpSpawner.MaybePreplaceForFloor(Indextag.floorIndex, col);
             }
             AssignPlatformType(platform);

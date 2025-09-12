@@ -5,7 +5,7 @@ public class PlatformIndex : MonoBehaviour
     public int floorIndex = 0;
     private void Start()
 	{
-		PowerUpSpawner2D spawner = FindObjectOfType<PowerUpSpawner2D>();
+		PowerUpSpawner2D spawner = FindFirstObjectByType<PowerUpSpawner2D>();
 		if (spawner == null)
 		{
 			return;

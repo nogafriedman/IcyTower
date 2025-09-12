@@ -179,7 +179,7 @@ public class PlayerController2D : MonoBehaviour
         {
             int idx = (int)p.floorIndex;
             scoreManager.UpdateState(idx);
-            if (powerUpSpawner == null) powerUpSpawner = FindObjectOfType<PowerUpSpawner2D>();
+            if (powerUpSpawner == null) powerUpSpawner = FindFirstObjectByType<PowerUpSpawner2D>();
             Debug.Log($"[Player] OncollisionEnter: floor {idx}");
             powerUpSpawner?.NotifyReachedFloor(idx);
         }
