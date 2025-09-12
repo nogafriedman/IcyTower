@@ -1,3 +1,4 @@
+
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -20,6 +21,11 @@ public class SpawnManager : MonoBehaviour
     [SerializeField] private float platformSpacing = 2f;
     [SerializeField] private float platformXMin = -5f;
     [SerializeField] private float platformXMax = 5f;
+
+    [Header("Bouncy Settings")]
+    [SerializeField, Range(0f, 1f)] private float bouncyChance = 0.3f;
+    [SerializeField] private Color bouncyColor = Color.green;
+    [SerializeField] private Color normalColor = Color.white;
 
     private int nextFloorIndex = 1;
 
@@ -76,6 +82,7 @@ public class SpawnManager : MonoBehaviour
                 if (powerUpSpawner == null) powerUpSpawner = FindObjectOfType<PowerUpSpawner2D>();
                 powerUpSpawner.MaybePreplaceForFloor(Indextag.floorIndex, col);
             }
+            MakePlatformBouncy(platform);
             platformPool.Add(platform);
             nextPlatformY += platformSpacing;
         }
@@ -109,7 +116,41 @@ public class SpawnManager : MonoBehaviour
 
         var indexTag = platform.GetComponent<PlatformIndex>() ?? platform.AddComponent<PlatformIndex>();
         indexTag.floorIndex = nextFloorIndex++;
-
+        MakePlatformBouncy(platform);
         nextPlatformY += platformSpacing;
+    }
+
+    private void MakePlatformBouncy(GameObject platform)
+    {
+        bool isBouncy = Random.value < bouncyChance;
+
+        if (isBouncy)
+        {
+            if (platform.GetComponent<BouncyPlatforms>() == null)
+            {
+                platform.AddComponent<BouncyPlatforms>();
+            }
+
+            var spriteRenderer = platform.GetComponent<SpriteRenderer>();
+            if (spriteRenderer != null)
+            {
+                spriteRenderer.color = bouncyColor;
+            }
+
+        }
+        else
+        {
+            var bounce = platform.GetComponent<BouncyPlatforms>();
+            if (bounce != null)
+            {
+                Destroy(bounce);
+            }
+
+            var spriteRenderer = platform.GetComponent<SpriteRenderer>();
+            if (spriteRenderer != null)
+            {
+                spriteRenderer.color = normalColor;
+            }
+        }
     }
 }
