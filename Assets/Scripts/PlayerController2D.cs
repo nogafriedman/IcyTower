@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class PlayerController2D : MonoBehaviour
 {
-    [SerializeField] private PowerUpSpawner2D powerUpSpawner;
+    [SerializeField] private PowerUpSpawner2D[] powerUpSpawners;
     public ScoreManager scoreManager;
     private Rigidbody2D rb;
 
@@ -46,10 +46,23 @@ public class PlayerController2D : MonoBehaviour
     [Header("Layers")]
     [SerializeField] private LayerMask groundLayers;
     [SerializeField] private LayerMask wallLayers;
-
+    [Header("Jetpack")]
+    [SerializeField] private float jetpackThrust = 18f;            // upward force per FixedUpdate while held
+    [SerializeField] private float jetpackMaxVerticalSpeed = 8f;    // cap so it doesn't rocket away
+    [SerializeField] private float jetpackGravityScale = 0.25f; // low gravity while jetpack runs
+    private bool jetpackActive = false;
+    private Coroutine jetpackRoutine = null;
     private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
+        if (powerUpSpawners == null || powerUpSpawners.Length == 0)
+        {
+#if UNITY_2023_1_OR_NEWER
+            powerUpSpawners = UnityEngine.Object.FindObjectsByType<PowerUpSpawner2D>(FindObjectsSortMode.None);
+#else
+    powerUpSpawners = UnityEngine.Object.FindObjectsOfType<PowerUpSpawner2D>();
+#endif
+        }
         groundMask = LayerMask.GetMask("Ground");
         baseMoveAcceleration = moveAcceleration;
         baseMaxSpeed = maxSpeed;
@@ -107,24 +120,33 @@ public class PlayerController2D : MonoBehaviour
             rb.AddForce(Vector2.up * totalJumpPower, ForceMode2D.Force);
             jump = false;
         }
-
-        if (sustainTimer > 0f && Input.GetButton("Jump") && rb.linearVelocity.y > 0f)
+        // Don't stack sustain with jetpack
+        if (sustainTimer > 0f && Input.GetButton("Jump") && rb.linearVelocity.y > 0f && !jetpackActive)
         {
             rb.AddForce(Vector2.up * jumpSustainForce, ForceMode2D.Force);
             sustainTimer -= Time.fixedDeltaTime;
         }
+        // --- Jetpack mode: free flight while active ---
+        if (jetpackActive)
+        {
+            // Light gravity while the pack is on (tune in Inspector)
+            rb.gravityScale = jetpackGravityScale;
 
-        if (rb.linearVelocity.y > 0f)
-        {
-            rb.gravityScale = Input.GetButton("Jump") ? ascendGravityScale : fallGravityScale;
-        }
-        else if (rb.linearVelocity.y < 0f)
-        {
-            rb.gravityScale = fallGravityScale;
+            // Hold Jump to go up; cap the vertical speed
+            if (Input.GetButton("Jump") && rb.linearVelocity.y < jetpackMaxVerticalSpeed)
+            {
+                rb.AddForce(Vector2.up * jetpackThrust, ForceMode2D.Force);
+            }
         }
         else
         {
-            rb.gravityScale = 1f;
+            // Normal gravity behaviour when jetpack is off
+            if (rb.linearVelocity.y > 0f)
+                rb.gravityScale = Input.GetButton("Jump") ? ascendGravityScale : fallGravityScale;
+            else if (rb.linearVelocity.y < 0f)
+                rb.gravityScale = fallGravityScale;
+            else
+                rb.gravityScale = 1f;
         }
 
     }
@@ -147,9 +169,10 @@ public class PlayerController2D : MonoBehaviour
         {
             int idx = (int)p.floorIndex;
             scoreManager.UpdateState(idx);
-            if (powerUpSpawner == null) powerUpSpawner = FindObjectOfType<PowerUpSpawner2D>();
-            Debug.Log($"[Player] reached floor {idx}");
-            powerUpSpawner?.NotifyReachedFloor(idx);
+            foreach (var s in powerUpSpawners)
+            {
+                s?.NotifyReachedFloor(idx);
+            }
         }
     }
     public void ApplyTemporaryMovementBoost(float multiplier, float durationSeconds)
@@ -176,5 +199,20 @@ public class PlayerController2D : MonoBehaviour
         moveAcceleration = baseMoveAcceleration;
         maxSpeed = baseMaxSpeed;
     }
+
+    public void ApplyJetpack(float durationSeconds)
+    {
+        if (jetpackRoutine != null) StopCoroutine(jetpackRoutine);
+        jetpackRoutine = StartCoroutine(JetpackFor(durationSeconds));
+    }
+
+    private IEnumerator JetpackFor(float seconds)
+    {
+        jetpackActive = true;
+        yield return new WaitForSeconds(seconds);
+        jetpackActive = false;
+        jetpackRoutine = null;
+    }
+
 
 }

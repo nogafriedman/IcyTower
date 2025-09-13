@@ -6,6 +6,8 @@ public sealed class PowerUpSpawner2D : MonoBehaviour
 {
     [SerializeField] private GameObject[] powerUpPrefabs;   // ← multiple prefabs
     [SerializeField] private int spawnEveryPlatforms = 20;
+    [SerializeField] private float minLeadAbovePlayer = 2.5f; // world units above player
+    private Transform player;
     private int nextSpawnFloor = 20;
 
     // set  platform layers in the Inspector
@@ -25,6 +27,8 @@ public sealed class PowerUpSpawner2D : MonoBehaviour
     {
         CollectPlatforms();
         nextSpawnFloor = spawnEveryPlatforms;
+        var playerGO = GameObject.FindGameObjectWithTag("Player");
+        if (playerGO != null) player = playerGO.transform;
     }
 
     private void CollectPlatforms()
@@ -112,7 +116,13 @@ public sealed class PowerUpSpawner2D : MonoBehaviour
         float right = b.max.x - horizontalPadding;
         if (right <= left) return;  // platform too narrow for our padding
 
-        Vector2 pos = new Vector2(Random.Range(left, right), b.max.y + verticalOffset);
+        float y = b.max.y + verticalOffset;
+        if (player != null)
+        {
+            // ensure the pickup is not “too late” – keep it ahead of the player
+            y = Mathf.Max(y, player.position.y + minLeadAbovePlayer);
+        }
+        Vector2 pos = new Vector2(Random.Range(left, right), y);
 
         // avoid overlaps with platform or other power-ups
         if (Physics2D.OverlapBox(pos, overlapCheckSize, 0f, platformLayers) != null) return;
@@ -148,6 +158,6 @@ public sealed class PowerUpSpawner2D : MonoBehaviour
             nextSpawnFloor += spawnEveryPlatforms;
         }
     }
-    
+
 
 }
