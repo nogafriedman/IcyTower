@@ -1,3 +1,4 @@
+
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -20,6 +21,15 @@ public class SpawnManager : MonoBehaviour
     [SerializeField] private float platformSpacing = 2f;
     [SerializeField] private float platformXMin = -5f;
     [SerializeField] private float platformXMax = 5f;
+
+    [Header("Bouncy Settings")]
+    [SerializeField, Range(0f, 1f)] private float bouncyChance = 0.3f;
+    [SerializeField] private Color bouncyColor = Color.green;
+    [SerializeField] private Color normalColor = Color.white;
+
+    [Header("Sticky Settings")]                       
+    [SerializeField, Range(0f, 1f)] private float stickyChance = 0.2f;
+    [SerializeField] private Color stickyColor = Color.yellow;
 
     private int nextFloorIndex = 1;
 
@@ -73,9 +83,10 @@ public class SpawnManager : MonoBehaviour
             var col = platform.GetComponent<Collider2D>();
             if (col != null)
             {
-                if (powerUpSpawner == null) powerUpSpawner = FindObjectOfType<PowerUpSpawner2D>();
+                if (powerUpSpawner == null) powerUpSpawner = FindFirstObjectByType<PowerUpSpawner2D>();
                 powerUpSpawner.MaybePreplaceForFloor(Indextag.floorIndex, col);
             }
+            AssignPlatformType(platform);
             platformPool.Add(platform);
             nextPlatformY += platformSpacing;
         }
@@ -109,7 +120,74 @@ public class SpawnManager : MonoBehaviour
 
         var indexTag = platform.GetComponent<PlatformIndex>() ?? platform.AddComponent<PlatformIndex>();
         indexTag.floorIndex = nextFloorIndex++;
-
+        AssignPlatformType(platform);
         nextPlatformY += platformSpacing;
     }
+
+    private void AssignPlatformType(GameObject platform)
+    {
+        StickyPlatforms sticky = platform.GetComponent<StickyPlatforms>();
+        BouncyPlatforms bouncy = platform.GetComponent<BouncyPlatforms>();
+        SpriteRenderer sr = platform.GetComponent<SpriteRenderer>();
+
+        if (sticky != null)
+        {
+            sticky.ResetSticky();
+        }
+
+        float roll = UnityEngine.Random.value;
+
+        if (roll < bouncyChance)
+        {
+            if (bouncy == null)
+            {
+                platform.AddComponent<BouncyPlatforms>();
+            }
+
+            if (sticky != null)
+            {
+                Destroy(sticky);
+            }
+
+            if (sr != null)
+            {
+                sr.color = bouncyColor;
+            }
+        }
+        else if (roll < bouncyChance + stickyChance)
+        {
+            if (sticky == null)
+            {
+                platform.AddComponent<StickyPlatforms>();
+            }
+
+            if (bouncy != null)
+            {
+                Destroy(bouncy);
+            }
+
+            if (sr != null)
+            {
+                sr.color = stickyColor;
+            }
+        }
+        else
+        {
+            if (sticky != null)
+            {
+                Destroy(sticky);
+            }
+
+            if (bouncy != null)
+            {
+                Destroy(bouncy);
+            }
+
+            if (sr != null)
+            {
+                sr.color = normalColor;
+            }
+        }
+    }
+
 }

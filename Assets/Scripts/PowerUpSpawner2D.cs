@@ -110,7 +110,7 @@ public sealed class PowerUpSpawner2D : MonoBehaviour
 
         if (platforms.Count == 0 || powerUpPrefabs == null || powerUpPrefabs.Length == 0)
         {
-            Debug.LogWarning("PowerUpSpawner2D: no platforms or prefabs assigned.");
+            // Debug.LogWarning("PowerUpSpawner2D: no platforms or prefabs assigned.");
             return false;
         }
 
@@ -138,7 +138,7 @@ public sealed class PowerUpSpawner2D : MonoBehaviour
 
             GameObject prefab = powerUpPrefabs[Random.Range(0, powerUpPrefabs.Length)];
             instance = Instantiate(prefab, pos, Quaternion.identity);
-            Debug.Log($"[Spawner] Spawned at {pos} using {prefab.name}");
+            // Debug.Log($"[Spawner] Spawned at {pos} using {prefab.name}");
             return true;
         }
 
