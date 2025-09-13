@@ -2,23 +2,22 @@ using UnityEngine;
 
 public class PlatformIndex : MonoBehaviour
 {
-    public int floorIndex = 0;
-    private void Start()
+	public int floorIndex = 0;
+	private void Start()
 	{
-		PowerUpSpawner2D spawner = FindFirstObjectByType<PowerUpSpawner2D>();
-		if (spawner == null)
-		{
-			return;
-		}
+		var col = GetComponent<Collider2D>();
+		if (!col) return;
 
-		Collider2D col = GetComponent<Collider2D>();
-		if (col == null)
-		{
-			return;
-		}
+#if UNITY_2023_1_OR_NEWER
+		var spawners = UnityEngine.Object.FindObjectsByType<PowerUpSpawner2D>(FindObjectsSortMode.None);
+#else
+	var spawners = UnityEngine.Object.FindObjectsOfType<PowerUpSpawner2D>();
+#endif
 
-		// spawner enforces 20/40/60… internally via nextSpawnFloor
-		spawner.MaybePreplaceForFloor((int)floorIndex, col);
+		for (int i = 0; i < spawners.Length; i++)
+		{
+			spawners[i].MaybePreplaceForFloor((int)floorIndex, col);
+		}
 	}
 }
 
