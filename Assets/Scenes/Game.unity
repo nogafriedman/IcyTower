@@ -294,7 +294,7 @@ MonoBehaviour:
   horizontalPadding: 0.3
   overlapCheckSize: {x: 0.35, y: 0.35}
   maxAttempts: 15
-  maxConcurrent: 15
+  maxConcurrent: -1
 --- !u!4 &298090335
 Transform:
   m_ObjectHideFlags: 0
@@ -1115,7 +1115,7 @@ MonoBehaviour:
   horizontalPadding: 0.3
   overlapCheckSize: {x: 0.35, y: 0.35}
   maxAttempts: 15
-  maxConcurrent: 15
+  maxConcurrent: -1
 --- !u!4 &1518386180
 Transform:
   m_ObjectHideFlags: 0
@@ -1243,11 +1243,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8494595115338026239, guid: b4054dc3d97b95746816fbfbfba51bc8, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 7.16
+      value: 7.99
       objectReference: {fileID: 0}
     - target: {fileID: 8494595115338026239, guid: b4054dc3d97b95746816fbfbfba51bc8, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -3.43
+      value: -2.5
       objectReference: {fileID: 0}
     - target: {fileID: 8494595115338026239, guid: b4054dc3d97b95746816fbfbfba51bc8, type: 3}
       propertyPath: m_LocalPosition.z
